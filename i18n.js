@@ -57,26 +57,6 @@
     var originalLocs = {}; // Here we will keep original localizations before using extendLanguage
 
     /**
-     * Acts the same as i18n.$, but this is the function that is copied to retrieved objects.
-     * Takes the value path as argument array . each part in the part as a separate argument
-     * @private
-     * @returns {*} localized value or object
-     */
-    var perObject$ = function () {
-        var loc = this;
-        for (var i = 0, len = arguments.length; i < len; i++) {
-            loc = loc[arguments[i]];
-        }
-        if (loc instanceof Object) {
-            loc['$'] = perObject$; // Copy the $ function. Specified using square brackets to force the compilers' hands.
-            if (Object.defineProperty) { // If possible, mark the $ function as not enumerable
-                Object.defineProperty(loc, '$', { enumerable: false })
-            }
-        }
-        return loc;
-    };
-
-    /**
      * The default plural form specifier.
      * This function returns a specifier for plural form, for the specified count.
      * @param {Number} count the number that we need to inspect
@@ -480,51 +460,6 @@
                 loc = postProcessValue(loc, options);
             }
 
-            return loc;
-        },
-
-        /**
-        * Retrieve a i18n value/object
-         * Takes the value path as argument array . each part in the part as a separate argument
-        * If returning an object - that object will have a $ function property, to retrieve sub-values.
-        * @public
-        * @expose
-        * @returns {*} localized value or object
-        */
-        $: function () {
-            if (!active) return '';
-            var loc = active;
-            for (var i = 0, len = arguments.length; i < len; i++) {
-                loc = loc[arguments[i]];
-            }
-            if (loc instanceof Object) {
-                loc['$'] = perObject$; // Copy the $ function. Specified using square brackets to force the compilers' hands.
-                if (Object.defineProperty) { // If possible, mark the $ function as not enumerable
-                    Object.defineProperty(loc, '$', { enumerable: false })
-                }
-            }
-            return loc;
-        },
-
-        /**
-        * Similar to $, but bypass extensions (first read from _originalLocs)
-        * Takes the value path as argument array . each part in the part as a separate argument
-        * @public
-        * @expose
-        * @returns {*} localized value or object
-        */
-        $$: function () {
-            if (!active) return '';
-            var loc = originalLocs[activeLanguage] || active;
-            for (var i = 0, len = arguments.length; i < len; i++) {
-                loc = loc[arguments[i]];
-            }
-            if (loc instanceof Object) {
-                loc['$'] = perObject$; // Copy the $ function. Specified using square brackets to force the compilers' hands.
-                if (Object.defineProperty) { // If possible, mark the $ function as not enumerable
-                    Object.defineProperty(loc, '$', { enumerable: false })
-                }
-            }
             return loc;
         },
 
