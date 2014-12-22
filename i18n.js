@@ -410,23 +410,72 @@
 
         /**
          * Retrieve a i18n value/object
+         * Accepted arguments are in the following formats:
+         *  (String keypath, [Boolean original], [Object options])
+         *  (String key, String key, String key, [Boolean original], [Object options])
+         *  (Array keypath, [Boolean original], [Object options])
+         *
+         * "keypath" is the path to the localized value.
+         * When the keypath is a String, each part is separated by a period.
+         * When the keypath is an Array, each part is a single part in the path.
+         *
+         * "original" specifies whether to access the original language, if the current language was extended. Default is false.
+         * "options" contains values that can be used in the localization, and possibly the "count" property which is used for plural values.
+         *
          * @public
          * @expose
-         * @param {String} key the path for the localized value. each part is separated by a period.
-         * @param {Object?} options data for postprocessing the returned string
+         * @param {...}
          * @returns {*} localized value or object
          */
-        t: function (key, options) {
-            key = key || '';
+        t: function () {
+            var args = arguments,
+                argIndex = 0,
+                keys,
+                useOriginial = false,
+                loc,
+                options;
 
-            // If not key is specified, return the root namespace
-            if (key.length === 0) {
-                return active;
+            if (typeof args[0] === 'string' && typeof args[1] !== 'string') {
+                keys = args[argIndex++];
+                if (keys.length === 0) {
+                    keys = [];
+                } else {
+                    keys = keys.split('.');
+                }
+            } else if (typeof args[0] === 'array') {
+                keys = args[argIndex++];
+            } else if (typeof args[0] === 'string' && typeof args[1] === 'string') {
+                var arg;
+                keys = [];
+                for (len = args.length; argIndex < len; argIndex++) {
+                    arg = args[argIndex];
+                    if (typeof arg === 'string') {
+                        keys.push(arg);
+                    } else {
+                        break;
+                    }
+                }
             }
 
-            var keys = key.split('.'),
-                loc = active,
-                i, len;
+            options = args[argIndex++];
+            if (typeof options === 'boolean') {
+                useOriginial = options;
+                options = args[argIndex];
+            }
+
+            if (useOriginial) {
+                loc = originalLocs[activeLanguage] || active;
+                for (var i = 0, len = arguments.length; i < len; i++) {
+                    loc = loc[arguments[i]];
+                }
+            } else {
+                loc = active;
+            }
+
+            // If not key is specified, return the root namespace
+            if (!keys.length) {
+                return loc;
+            }
 
             if (options && typeof options['count'] === 'number') { // Try for plural form
 
@@ -438,7 +487,7 @@
                 var pluralSpec = active['__options__'].plural;
                 pluralSpec = pluralSpec(options['count']);
 
-                key = keys[keys.length - 1]; // This is the last key in the keys array
+                var key = keys[keys.length - 1]; // This is the last key in the keys array
 
                 if (pluralSpec && loc[key + '_' + pluralSpec]) {
                     // We have a match for the plural form
