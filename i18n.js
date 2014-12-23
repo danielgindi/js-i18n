@@ -406,7 +406,7 @@
             }
 
             if (options) {
-                loc = this.processLocalizedString(loc, options);
+                loc = i18n.processLocalizedString(loc, options);
             }
 
             return loc;
