@@ -274,106 +274,6 @@
         return value;
     };
 
-    /**
-     * Post process a localization value.
-     * Pass 1:
-     *      Look for localization value specified in the form of:
-     *          {key.subkey}
-     *          {key.subkey:html}
-     *          {key.subkey:json}
-     *          {key.subkey:url}
-     * Pass 2:
-     *      Then look for placeholders from the passed options, in the form of:
-     *          {{count}}
-     *          {{data.value:2.5f:html}}
-     *          {{data.value:html}} etc.
-     * Pass 3:
-     *      Look for i18n calls in the form of:
-     *          t("key.path") t('key.path') t(key.path) or t("key.path", {"count": 5})
-     *      Where the options part must be a valid JSON
-     *      This stage is affected by previous stages (i.e placeholders can be JSON encoded for t(...) calls
-     *
-     * localization format is {key.path[:html|json|url]}
-     * Placeholder format is {{key.path[:printf-specifier][:html|json|url]}} and accepts a printf specifier
-     *
-     * Printf specifiers are in this order:
-     *
-     *  "[+][ ][#][0][width][,][.precision]"
-     *
-     * +            : Forces to precede the result with a plus or minus sign (+ or -) even for positive numbers.
-     * (space)      : If no sign is going to be written, a blank space is inserted before the value.
-     * #            : For o, x or X specifiers the value is prefixed with 0, 0x or 0X respectively for values different than zero.
-     *                For with e, E, f, g it forces the written output to contain a decimal point even if no more digits follow
-     * 0            : Left-pads the number with zeroes (0) instead of spaces when padding is specified
-     * (width)      : Minimum number of characters to be printed, left-padded with spaces or zeroes.
-     *                If shorter than the number, then the number is not truncated.
-     * ,            : For d, i, u, f, g specifiers, adds thousand grouping characters
-     * (precision)  : For integer specifiers (d, i, u, o, x, X) - specifies the minimum number of digits to be written. Does not truncate, except for 0.
-     *                For e, E, f specifiers: this is the number of digits to be printed after the decimal point
-     *                For g specifier: This is the maximum number of significant digits to be printed.
-     *                For s: this is the maximum number of characters to be printed
-     *
-     * @param {String} value the value to process
-     * @param {Object?} data the data for post processing
-     * @returns {string} the processed value
-     */
-    var postProcessValue = function (value, data) {
-
-        var localeOptions = active['__options__'];
-
-        value = value.replace(/(\{([^"\{}]+?)(:(html|json|url))?})|(\{\{([^"\{}]+?)(:([+# 0-9\.,]*[bcdieEfgouxXs]))?(:(html|json|url))?}})/g, function () {
-            var key, encoding;
-
-            if (arguments[1]) {
-                key = arguments[2];
-                encoding = arguments[4];
-
-                return encodeValue(i18n.t(key), encoding);
-            } else if (arguments[5]) {
-                key = arguments[6];
-                encoding = arguments[10];
-                var specifiers = arguments[8];
-
-                var keys = key.split('.');
-                var value = data;
-                for (var i = 0, len = keys.length; i < len; i++) {
-                    value = value[keys[i]];
-                }
-
-                value = applySpecifiers(value, specifiers, localeOptions.decimal, localeOptions.thousands);
-                value = encodeValue(value, encoding);
-
-                return value;
-            }
-        });
-
-        value = value.replace(/t\(("[^"]+?"|'[^']+?'|[^,)]+?)(,\s*(\{.*?}))?\)/g, function () {
-
-            var key = arguments[1],
-                options = arguments[3];
-            try {
-                key = JSON.parse(key);
-            }
-            catch (e) {
-                return arguments[0];
-            }
-            if (options) {
-                try {
-                    options = JSON.parse(options);
-                }
-                catch (e) {
-                    options = null;
-                }
-            }
-
-            return i18n.t(key, options);
-
-        });
-
-        return value;
-
-    };
-
     /** @typedef i18n */
     var i18n = {
 
@@ -431,7 +331,7 @@
             var args = arguments,
                 argIndex = 0,
                 keys,
-                useOriginial = false,
+                useOriginal = false,
                 loc,
                 options;
 
@@ -459,11 +359,11 @@
 
             options = args[argIndex++];
             if (typeof options === 'boolean') {
-                useOriginial = options;
+                useOriginal = options;
                 options = args[argIndex];
             }
 
-            if (useOriginial) {
+            if (useOriginal) {
                 loc = originalLocs[activeLanguage] || active;
                 for (var i = 0, len = arguments.length; i < len; i++) {
                     loc = loc[arguments[i]];
@@ -506,7 +406,7 @@
             }
 
             if (options) {
-                loc = postProcessValue(loc, options);
+                loc = this.processLocalizedString(loc, options);
             }
 
             return loc;
@@ -861,21 +761,104 @@
         },
 
         /**
-        * Localize a template string using the {key.anotherKey} syntax
-        * We can specify encoding too, like {key:html}, {key:json}, {key:url}
-        * @public
-        * @expose
-        * @param {String} template the template to localized
-        * @returns {String} a localized template
-        */
-        localizeTemplate: function (template) {
-            var loc = this;
-            return template.replace(/\{([^"\{}]+?)(:(html|json|url))?}/g, function () {
-                var key = arguments[1],
-                    encoding = arguments[3],
-                    value = loc.t(key);
-                return encodeValue(value, encoding);
+         * Process a localized string.
+         *
+         * Pass 1:
+         *      Look for localization value specified in the form of:
+         *          {key.subkey}
+         *          {key.subkey:html}
+         *          {key.subkey:json}
+         *          {key.subkey:url}
+         * Pass 2:
+         *      Then look for placeholders from the passed options, in the form of:
+         *          {{count}}
+         *          {{data.value:2.5f:html}}
+         *          {{data.value:html}} etc.
+         * Pass 3:
+         *      Look for i18n calls in the form of:
+         *          t("key.path") t('key.path') t(key.path) or t("key.path", {"count": 5})
+         *      Where the options part must be a valid JSON
+         *      This stage is affected by previous stages (i.e placeholders can be JSON encoded for t(...) calls
+         *
+         * localization format is {key.path[:html|json|url]}
+         * Placeholder format is {{key.path[:printf-specifier][:html|json|url]}} and accepts a printf specifier
+         *
+         * Printf specifiers are in this order:
+         *
+         *  "[+][ ][#][0][width][,][.precision]"
+         *
+         * +            : Forces to precede the result with a plus or minus sign (+ or -) even for positive numbers.
+         * (space)      : If no sign is going to be written, a blank space is inserted before the value.
+         * #            : For o, x or X specifiers the value is prefixed with 0, 0x or 0X respectively for values different than zero.
+         *                For with e, E, f, g it forces the written output to contain a decimal point even if no more digits follow
+         * 0            : Left-pads the number with zeroes (0) instead of spaces when padding is specified
+         * (width)      : Minimum number of characters to be printed, left-padded with spaces or zeroes.
+         *                If shorter than the number, then the number is not truncated.
+         * ,            : For d, i, u, f, g specifiers, adds thousand grouping characters
+         * (precision)  : For integer specifiers (d, i, u, o, x, X) - specifies the minimum number of digits to be written. Does not truncate, except for 0.
+         *                For e, E, f specifiers: this is the number of digits to be printed after the decimal point
+         *                For g specifier: This is the maximum number of significant digits to be printed.
+         *                For s: this is the maximum number of characters to be printed
+         *
+         * @param {String} value the value to process
+         * @param {Object?} data the data for post processing
+         * @returns {string} the processed value
+         */
+        processLocalizedString: function (value, data) {
+
+            var localeOptions = active['__options__'];
+
+            value = value.replace(/(\{([^"\{}]+?)(:(html|json|url))?})|(\{\{([^"\{}]+?)(:([+# 0-9\.,]*[bcdieEfgouxXs]))?(:(html|json|url))?}})/g, function () {
+                var key, encoding;
+
+                if (arguments[1]) {
+                    key = arguments[2];
+                    encoding = arguments[4];
+
+                    return encodeValue(i18n.t(key), encoding);
+                } else if (arguments[5]) {
+                    key = arguments[6];
+                    encoding = arguments[10];
+                    var specifiers = arguments[8];
+
+                    var keys = key.split('.');
+                    var value = data;
+                    for (var i = 0, len = keys.length; i < len; i++) {
+                        value = value[keys[i]];
+                    }
+
+                    var processedValue = applySpecifiers(value, specifiers, localeOptions.decimal, localeOptions.thousands);
+                    processedValue = encodeValue(processedValue, encoding);
+
+                    return processedValue;
+                }
             });
+
+            value = value.replace(/t\(("[^"]+?"|'[^']+?'|[^,)]+?)(,\s*(\{.*?}))?\)/g, function () {
+
+                var key = arguments[1],
+                    options = arguments[3];
+                try {
+                    key = JSON.parse(key);
+                }
+                catch (e) {
+                    return arguments[0];
+                }
+                if (options) {
+                    try {
+                        options = JSON.parse(options);
+                    }
+                    catch (e) {
+                        options = null;
+                    }
+                }
+
+                return i18n.t(key, options);
+
+            });
+
+            return value;
+
         }
 
     };
