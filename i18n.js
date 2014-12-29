@@ -76,7 +76,7 @@
      */
     var encodeValue = function (value, encoding) {
         if (encoding === 'html') {
-            value = value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+            value = (value == null ? '' : (value + '')).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#39;").replace(/"/g, "&quot;");
         } else if (encoding === 'json') {
             value = JSON.stringify(value);
         } else if (encoding === 'url') {
