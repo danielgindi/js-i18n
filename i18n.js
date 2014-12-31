@@ -302,10 +302,39 @@
         * @public
         * @expose
         * @param {String} lang language code
+        * @param {Boolean?} tryFallbacks should we try to search in fallback scenarios i.e. 'en' for 'en-US'
+        * @param {Boolean?} returnCode should we return the language code as well
         * @returns {Object} language object
         */
-        getLanguage: function (lang) {
-            return locs[lang];
+        getLanguage: function (lang, tryFallbacks, returnCode) {
+            if (tryFallbacks) {
+                if (lang === 'iw') lang = 'he'; // Fallback from Google's old spec, if the setting came from an old Android device
+                if (!lang) {
+                    lang = this.getAvailableLanguages()[0];
+                }
+                var found = null;
+                while (typeof lang === 'string') {
+                    if (found = locs[lang]) break;
+                    var idx = lang.lastIndexOf('-');
+                    if (idx < 0) {
+                        idx = lang.lastIndexOf('_');
+                    }
+                    if (idx > 0) {
+                        lang = lang.substr(0, idx);
+                    }
+                    else break;
+                }
+                if (!found) {
+                    lang = this.getAvailableLanguages()[0];
+                    found = locs[lang];
+                }
+                if (returnCode) {
+                    return { 'code': lang, 'lang': found };
+                }
+                return found;
+            } else {
+                return locs[lang];
+            }
         },
 
         /**
@@ -421,26 +450,9 @@
         * @returns {i18n} self
         */
         setActiveLanguage: function (lang) {
-            if (lang === 'iw') lang = 'he'; // Fallback from Google's old spec, if the setting came from an old Android device
-            if (!lang) {
-                lang = this.getAvailableLanguages()[0];
-            }
-            while (typeof lang === 'string') {
-                if (active = locs[lang]) break;
-                var idx = lang.lastIndexOf('-');
-                if (idx < 0) {
-                    idx = lang.lastIndexOf('_');
-                }
-                if (idx > 0) {
-                    lang = lang.substr(0, idx);
-                }
-                else break;
-            }
-            if (!active) {
-                lang = this.getAvailableLanguages()[0];
-                active = locs[lang];
-            }
-            activeLanguage = lang;
+            var found = this.getLanguage(lang, true, true);
+            active = found.lang;
+            activeLanguage = found.code;
             return this;
         },
 
