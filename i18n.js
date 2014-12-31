@@ -56,6 +56,33 @@
     var locs = {}; // Here we will keep i18n objects, each key is a language code
     var originalLocs = {}; // Here we will keep original localizations before using extendLanguage
 
+    var _escapeRgx = /([\/()[\]?{}|*+-\\:])/g;
+    var regexEscape = function (string) {
+        return string.replace(_escapeRgx, '\\$1');
+    };
+    var arrayIndexOf = function(array, searchElement, fromIndex) {
+        var k, o = array;
+        var len = o.length >>> 0;
+        if (len === 0) {
+            return -1;
+        }
+        var n = +fromIndex || 0;
+        if (Math.abs(n) === Infinity) {
+            n = 0;
+        }
+        if (n >= len) {
+            return -1;
+        }
+        k = Math.max(n >= 0 ? n : len - Math.abs(n), 0);
+        while (k < len) {
+            if (k in o && o[k] === searchElement) {
+                return k;
+            }
+            k++;
+        }
+        return -1;
+    };
+
     /**
      * The default plural form specifier.
      * This function returns a specifier for plural form, for the specified count.
@@ -568,124 +595,442 @@
 
         /**
         * Format a date to a localized string, assuming that the "calendar" key is available.
-        * Supports only the following codes: d dd ddd dddd M MM MMM MMMM yy yyyy
+        * Supports all formatting codes known to humanity.
         * @public
         * @expose
-        * @param {Date} date the date to format
-        * @param {String} format the format
-        * @returns {String} a localized date
+        * @param {Date} date The date to format
+        * @param {String} format The format
+        * @param {String|Object|null|?} culture Can accept a culture code, a culture object,
+        *                                       or a simple "calendar" object which contains the keys "months", "months_short", "days" and "days_short"
+        * @returns {String} A localized date
         */
-        formatDate: (function (date, format) {
+        formatDate: (function () {
 
-            var formatMatcher = /d{1,4}|M{1,4}|yy(?:yy)?|"[^"]*"|'[^']*'/g,
-			    pad = function (val, len) {
-			        val = String(val);
-			        len = len || 2;
-			        while (val.length < len) val = '0' + val;
-			        return val;
-			    };
+            var formatMatcher = /d{1,4}|M{1,4}|yy(?:yy)?|([HhmsTt])\1?|[LloSZ]|UTC|"[^"]*"|'[^']*'/g,
+                timezone = /\b(?:[PMCEA][SDP]T|[a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)?(?:[-+]\d{4})?)\b/g,
+                timezoneClip = /[^-+\dA-Z]/g,
+                pad = function (val, len) {
+                    val = val + '';
+                    while (val.length < len) val = '0' + val;
+                    return val;
+                };
 
-            var loc = null;
+            /** @typedef {FlagMap} */
+            var FlagMap = { d: null, D: null, M: null, y: null, H: null, m: null, s: null, L: null, o: null, utcd: null, utc: null };
 
-            /** @expose */
-            var flags = {
-                /** @expose */d: function (date) { return date.getDate(); },
-                /** @expose */dd: function (date) { return pad(date.getDate()); },
-                /** @expose */ddd: function (date) { return loc['weekdays_short'][date.getDay()]; },
-                /** @expose */dddd: function (date) { return loc['weekdays'][date.getDay()]; },
-                /** @expose */M: function (date) { return date.getMonth() + 1; },
-                /** @expose */MM: function (date) { return pad(date.getMonth() + 1); },
-                /** @expose */MMM: function (date) { return loc['months_short'][date.getDay()]; },
-                /** @expose */MMMM: function (date) { return loc['months'][date.getDay()]; },
-                /** @expose */yy: function (date) { return String(date.getFullYear()).slice(2); },
-                /** @expose */yyyy: function (date) { return date.getFullYear(); }
+            /** @type {FlagMap} */
+            var flagSubMapLocal = {
+                /** @param {Date} d */ /** @returns {Number} */ d: function (d) { return d.getDate(); },
+                /** @param {Date} d */ /** @returns {Number} */ D: function (d) { return d.getDay(); },
+                /** @param {Date} d */ /** @returns {Number} */ M: function (d) { return d.getMonth(); },
+                /** @param {Date} d */ /** @returns {Number} */ y: function (d) { return d.getFullYear(); },
+                /** @param {Date} d */ /** @returns {Number} */ H: function (d) { return d.getHours(); },
+                /** @param {Date} d */ /** @returns {Number} */ m: function (d) { return d.getMinutes(); },
+                /** @param {Date} d */ /** @returns {Number} */ s: function (d) { return d.getSeconds(); },
+                /** @param {Date} d */ /** @returns {Number} */ L: function (d) { return d.getMilliseconds(); },
+                /** @param {Date} d */ /** @returns {Number} */ o: function (d) { return 0; },
+                /** @param {Date} d */ /** @returns {String} */ utcd: function (d) { return ((d + '').match(timezone) || ['']).pop().replace(timezoneClip, ''); },
+                /** @param {Date} d */ /** @returns {String} */ utc: function (d) { var z = d.getTimezoneOffset(), s = (z > 0 ? '-' : '+'); z = z < 0 ? -z : z; var zm = z % 60; return s + pad((z - zm) / 60, 2) + (zm ? pad(zm, 2) : ''); }
+            };
+
+            /** @type {FlagMap} */
+            var flagSubMapUtc = {
+                /** @param {Date} d */ /** @returns {Number} */ d: function (d) { return d.getUTCDate(); },
+                /** @param {Date} d */ /** @returns {Number} */ D: function (d) { return d.getUTCDay(); },
+                /** @param {Date} d */ /** @returns {Number} */ M: function (d) { return d.getUTCMonth(); },
+                /** @param {Date} d */ /** @returns {Number} */ y: function (d) { return d.getUTCFullYear(); },
+                /** @param {Date} d */ /** @returns {Number} */ H: function (d) { return d.getUTCHours(); },
+                /** @param {Date} d */ /** @returns {Number} */ m: function (d) { return d.getUTCMinutes(); },
+                /** @param {Date} d */ /** @returns {Number} */ s: function (d) { return d.getUTCSeconds(); },
+                /** @param {Date} d */ /** @returns {Number} */ L: function (d) { return d.getUTCMilliseconds(); },
+                /** @param {Date} d */ /** @returns {Number} */ o: function (d) { return d.getTimezoneOffset(); },
+                /** @param {Date} d */ /** @returns {String} */ utcd: function (d) { return "UTC" },
+                /** @param {Date} d */ /** @returns {String} */ utc: function (d) { return "Z" }
             };
 
             /** @expose */
-            return function (date, format) {
+            var flagMap = {
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ d: function (o, fmap) { return fmap.d(o); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ dd: function (o, fmap) { return pad(fmap.d(o), 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ ddd: function (o, fmap, culture) { return culture['weekdays_short'][fmap.D(o)]; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ dddd: function (o, fmap, culture) { return culture['weekdays'][fmap.D(o)]; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ M: function (o, fmap) { return fmap.M(o) + 1; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ MM: function (o, fmap) { return pad(fmap.M(o) + 1, 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ MMM: function (o, fmap, culture) { return culture['months_short'][fmap.M(o)]; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ MMMM: function (o, fmap, culture) { return culture['months'][fmap.M(o)]; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ yy: function (o, fmap) { return String(fmap.y(o)).slice(2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ yyyy: function (o, fmap) { return fmap.y(o); },
+                /** @expose @param {FlagMap} fmap */ /** @return {Number} */ h: function (o, fmap) { return fmap.H(o) % 12 || 12; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ hh: function (o, fmap) { return pad(fmap.H(o) % 12 || 12, 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ H: function (o, fmap) { return fmap.H(o); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ HH: function (o, fmap) { return pad(fmap.H(o), 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ m: function (o, fmap) { return fmap.m(o); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ mm: function (o, fmap) { return pad(fmap.m(o), 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ s: function (o, fmap) { return fmap.s(o); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ ss: function (o, fmap) { return pad(fmap.s(o), 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ l: function (o, fmap) { return pad(fmap.L(o), 3); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ L: function (o, fmap) { var L = fmap.L(o); return pad(L > 99 ? Math.round(L / 10) : L, 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ t: function (o, fmap) { return fmap.H(o) < 12 ? "a" : "p" },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ tt: function (o, fmap) { return fmap.H(o) < 12 ? "am" : "pm" },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ T: function (o, fmap) { return fmap.H(o) < 12 ? "A" : "P" },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ TT: function (o, fmap) { return fmap.H(o) < 12 ? "AM" : "PM" },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ Z: function (o, fmap) { return fmap.utc(o) },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ UTC: function (o, fmap) { return fmap.utcd(o) },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ o: function (o, fmap) { o = fmap.o(o); return (o > 0 ? "-" : "+") + pad(Math.floor(Math.abs(o) / 60) * 100 + Math.abs(o) % 60, 4) },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ S: function (o, fmap) { var d = fmap.d(o); return ["th", "st", "nd", "rd"][d % 10 > 3 ? 0 : (d % 100 - d % 10 != 10) * d % 10] }
+            };
+
+            return function (date, format, culture) {
+                if (culture && typeof culture === 'string') {
+                    culture = i18n.getLanguage(culture, true);
+                }
+                if (!culture) {
+                    culture = active;
+                }
+                culture = culture['calendar'] ? culture['calendar'] : culture;
+
+                // Passing date through Date applies Date.parse, if necessary
+                if (!date) {
+                    date = new Date();
+                } else if (typeof date === 'string') {
+                    date = i18n.parse(date, null, culture);
+                } else if (date instanceof Date) {
+                    // date = new Date(date);
+                } else if (typeof date === 'number') {
+                    date = new Date(date);
+                } else {
+                    date = NaN;
+                }
+
+                if (isNaN(date)) throw new SyntaxError("invalid date");
+
+                var utc = false;
+
                 if (!format) {
                     format = 'yyyy-MM-dd'; // ISO
                 }
 
-                var self = this;
-                loc = active['calendar'];
+                // Allow setting the utc argument via the a special UTC: specifier
+                if (format.substr(0, 4) === 'UTC:') {
+                    utc = true;
+                    format = format.slice(4);
+                }
+
+                // Allow setting the utc argument via the Z specifier
+                if (format.charAt(format.length - 1) === 'Z') {
+                    utc = true;
+                }
+
+                var f = utc ? flagSubMapUtc : flagSubMapLocal;
 
                 return format.replace(formatMatcher, function (token) {
-                    return (token in flags) ?
-                        flags[token].call(self, date) : // Real token, like dddd or YY
-                        token.slice(1, token.length - 1); // Quoted token, like "dd"
+                    return (token in flagMap) ? (flagMap[token])(date, f, culture) : token.slice(1, token.length - 1);
                 });
-
             };
-
         })(),
 
         /**
-        * Parses a date from user input, based on a supplied format. This is *not* the counterpart of the formatDate function.
-        * Supports only the numerical date codes (d dd M MM y yy).
-        * Will automatically fall back if missing a digit i.e 1/2/34 for dd/MM/yyyy.
-        * Forgiving behavior with "incorrect" separators, i.e 01.05 instead of 01/05...
-        * Any missing values will default to today. So a missing year will default to current year, etc.
+        * Parses a date from user input, based on a supplied format. This is the counterpart of the formatDate function.
+        * Supports all formatting codes known to humanity.
+        * Will automatically fall back if missing a digit i.e 1/2/34 for dd/MM/yyyy, unless `exact` is specified.
+        * Forgiving behavior with "incorrect" separators, i.e 01.05 instead of 01/05, unless `exact` is specified.
+        * If year is missing, it will default to current year. Anything else will default to zero.
+        *
+        * This function actually uses the `createDateParser(...)` function, and caches the result.
         * @public
         * @expose
-        * @param {Date} date the date to format
-        * @param {String} format the format
-        * @returns {Date} the parsed date
+        * @param {Date} date The date to format
+        * @param {String?} format The format. Defaults to UTC ISO. (yyyy-MM-DD'T'HH:mm:ssZ)
+        * @param {String|Object|null|?} culture Can accept a culture code, a culture object,
+        *                                       or a simple "calendar" object which contains the keys "months", "months_short", "days" and "days_short"
+        * @param {Boolean} exact Should the parser be strict? false by default, forgiving missing digits etc.
+        * @returns {Date} The parsed date
         */
-        parseDate: function (date, format, hours, minutes, seconds, milliseconds) {
-            if (date instanceof Date) return date;
-            if (!date) return null;
+        parseDate: function (date, format, culture, exact) {
+            if (culture && typeof culture === 'string') {
+                culture = i18n.getLanguage(culture, true);
+            }
+            if (!culture) {
+                culture = active;
+            }
+            culture = culture['calendar'] ? culture['calendar'] : culture;
 
-            var now = new Date,
-                values = {
-                    year: now.getFullYear(),
-                    month: now.getMonth() + 1,
-                    day: now.getDate()
-                },
-                baseYear = values.year;
-
-            var parts = [], lastChar = '', c;
-            for (var i = 0; i < format.length; i++) {
-                c = format.charAt(i);
-                if (c !== lastChar) {
-                    if (c === 'd' || c === 'M' || c === 'y') {
-                        parts.push(c);
-                    }
-                }
-                lastChar = c;
+            if (!format) {
+                format = 'yyyy-MM-dd\'T\'HH:mm:ssZ';
             }
 
-            var partIndex = 0, lastIndex = -1, c, slice;
-            for (var i = 0; i < date.length + 1; i++) {
-                c = date.charAt(i);
-                if (c >= '0' && c <= '9') {
-                    if (lastIndex === -1) {
-                        lastIndex = i;
-                    }
-                } else if (lastIndex > -1) {
-                    slice = date.substr(lastIndex, i - lastIndex);
-                    var part = parts[partIndex++];
-                    if (part === 'd') {
-                        values.day = parseFloat(slice);
-                    } else if (part === 'M') {
-                        values.month = parseFloat(slice);
-                    } else if (part === 'y') {
-                        values.year = parseFloat(slice);
-                        if (values.year < 100 && slice.length <= 2) {
-                            values.year += Math.floor(baseYear / 100) * 100;
-                            if (values.year - baseYear >= 50) {
-                                values.year -= 100;
-                            }
-                        }
-                    } else {
-                        break;
-                    }
-                    lastIndex = -1;
-                }
+            var compiled = culture[exact ? '_compiledParsersE' : '_compiledParsers'];
+            if (!compiled) culture[exact ? '_compiledParsersE' : '_compiledParsers'] = compiled = {};
+
+            if (!compiled[format]) {
+                compiled[format] = i18n.createDateParser(format, culture, exact);
             }
 
-            return new Date(values.year, values.month - 1, values.day, hours || 0, minutes || 0, seconds || 0, milliseconds || 0);
+            return compiled[format](date, culture);
         },
+
+        /**
+         * Creates a date parser. This is generally used (and cached) by `parseDate(...)`.
+         * Supports all formatting codes known to humanity.
+         * Will automatically fall back if missing a digit i.e 1/2/34 for dd/MM/yyyy, unless `exact` is specified.
+         * Forgiving behavior with "incorrect" separators, i.e 01.05 instead of 01/05, unless `exact` is specified.
+         * If year is missing, it will default to current year. Anything else will default to zero.
+         * @public
+         * @expose
+         * @param {String} format The format
+         * @param {Object} culture An object which contains the keys "months", "months_short", "days" and "days_short"
+         * @param {Boolean} exact Should the parser be strict? false by default, forgiving missing digits etc.
+         * @returns {function(String):Date} The parser function
+         */
+        createDateParser: (function () {
+            var partsRgx = /('[^'\\]*(?:\\.[^'\\]*)*')|yyyy|yy|MMMM|MMM|MM|M|dddd|ddd|dd|d|HH|H|hh|h|mm|m|ss|s|l|L|tt|t|TT|T|Z|UTC|o|S|.+?/g;
+
+            var arrayToRegex = function (array) {
+                var regex = '';
+                for (var i = 0; i < array.length; i++) {
+                    if (i > 0) regex += '|';
+                    regex += regexEscape(array[i]);
+                }
+                return regex;
+            };
+
+            var strictParts = {
+                    'yyyy': function() { return '[0-9]{4}'; },
+                    'yy': function() { return '[0-9]{2}'; },
+                    'MMMM': function(culture) { return arrayToRegex(culture['months']); },
+                    'MMM': function(culture) { return arrayToRegex(culture['months_short']); },
+                    'MM': function() { return '[0-9]{2}'; },
+                    'M': function() { return '[0-9]{1,2}'; },
+                    'dddd': function(culture) { return arrayToRegex(culture['days']); },
+                    'ddd': function(culture) { return arrayToRegex(culture['days_short']); },
+                    'dd': function() { return '[0-9]{2}'; },
+                    'd': function() { return '[0-9]{1,2}'; },
+                    'HH': function() { return '[0-9]{2}'; },
+                    'H': function() { return '[0-9]{1,2}'; },
+                    'hh': function() { return '[0-9]{2}'; },
+                    'h': function() { return '[0-9]{1,2}'; },
+                    'mm': function() { return '[0-9]{2}'; },
+                    'm': function() { return '[0-9]{1,2}'; },
+                    'ss': function() { return '[0-9]{2}'; },
+                    's': function() { return '[0-9]{1,2}'; },
+                    'l': function() { return '[0-9]{3}'; },
+                    'L': function() { return '[0-9]{2}'; },
+                    'tt': function() { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
+                    't': function() { return 'a|A|p|P'; },
+                    'TT': function() { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
+                    'T': function() { return 'a|A|p|P'; },
+                    'Z': function() { return 'Z|(?:GMT|UTC)?[+-][0-9]{2,4}(?:\\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\\))?'; },
+                    'UTC': function() { return '[+-][0-9]{2,4}'; },
+                    'o': function() { return '[+-][0-9]{4}'; },
+                    'S': function() { return 'th|st|nd|rd'; }
+                },
+                unstrictParts = {
+                    'yyyy': function() { return '[0-9]{2}|[0-9]{4}'; },
+                    'yy': function() { return '[0-9]{2}'; },
+                    'MMMM': function(culture) { return arrayToRegex(culture['months']); },
+                    'MMM': function(culture) { return arrayToRegex(culture['months_short']); },
+                    'MM': function() { return '[0-9]{1,2}'; },
+                    'M': function() { return '[0-9]{1,2}'; },
+                    'dddd': function(culture) { return arrayToRegex(culture['days']); },
+                    'ddd': function(culture) { return arrayToRegex(culture['days_short']); },
+                    'dd': function() { return '[0-9]{1,2}'; },
+                    'd': function() { return '[0-9]{1,2}'; },
+                    'HH': function() { return '[0-9]{1,2}'; },
+                    'H': function() { return '[0-9]{1,2}'; },
+                    'hh': function() { return '[0-9]{1,2}'; },
+                    'h': function() { return '[0-9]{1,2}'; },
+                    'mm': function() { return '[0-9]{1,2}'; },
+                    'm': function() { return '[0-9]{1,2}'; },
+                    'ss': function() { return '[0-9]{1,2}'; },
+                    's': function() { return '[0-9]{1,2}'; },
+                    'l': function() { return '[0-9]{3}'; },
+                    'L': function() { return '[0-9]{2}'; },
+                    'tt': function() { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
+                    't': function() { return 'a|A|p|P'; },
+                    'TT': function() { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
+                    'T': function() { return 'a|A|p|P'; },
+                    'Z': function() { return 'Z|(?:GMT|UTC)?[+-][0-9]{2,4}(?:\\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\\))?'; },
+                    'UTC': function() { return '[+-][0-9]{2,4}'; },
+                    'o': function() { return '[+-][0-9]{4}'; },
+                    'S': function() { return 'th|st|nd|rd'; }
+                };
+
+            return function (format, culture, exact) {
+                var formatParts = format.match(partsRgx);
+                var regex = '';
+                var regexParts = [];
+
+                var i, count, part;
+
+                // Remove all empty groups
+                for (i = 0, count = formatParts.length; i < count; i++) {
+                    if (formatParts[i].length === 0) {
+                        formatParts.splice(i, 1);
+                        i--;
+                        count--;
+                    }
+                }
+
+                // Go over all parts in the format, and create the parser regex part by part
+                for (i = 0, count = formatParts.length; i < count; i++) {
+                    part = formatParts[i];
+                    if (strictParts.hasOwnProperty(part)) {
+                        // An actually recognized part
+                        if (!exact &&
+                            (i === 0 || (i > 0 && !strictParts.hasOwnProperty(formatParts[i-1]))) &&
+                            (i === count - 1 || (i < count - 1 && !strictParts.hasOwnProperty(formatParts[i+1])))) {
+                            regex += '(' + unstrictParts[part](culture) + ')';
+                        } else {
+                            regex += '(' + strictParts[part](culture) + ')';
+                        }
+                        regexParts.push(part);
+                    } else {
+                        // A free text node
+                        part = part.replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/, '$1'); // Remove enclosing quotes if there are...
+                        part = part.replace(/\\\\/g, '\\'); // Unescape
+                        if (!exact && (part === '/' || part === '.' || part === '-')) {
+                            regex += '([/\\.-])';
+                        } else {
+                            regex += '(' + regexEscape(part) + ')';
+                        }
+                        regexParts.push('');
+                    }
+                }
+
+                regex = new RegExp('^' + regex + '$');
+
+                // This is for calculating which side to go for 2 digit years
+                var baseYear = Math.floor((new Date()).getFullYear() / 100) * 100;
+
+                // Return a parser function
+                return function (date) {
+                    date = date + '';
+                    var parts = date.match(regex);
+                    if (!parts) return null;
+
+                    parts.splice(0, 1); // Remove main capture group 0
+
+                    var now = new Date(),
+                        nowYear = now.getFullYear();
+                    var year = null, month = null, day = null,
+                        hours = null, hours12 = false, hoursTT, minutes = null,
+                        seconds = null, milliseconds = null,
+                        timezone = null;
+
+                    for (var i = 0, len = parts.length, part, tmp; i < len; i++) {
+                        part = parts[i];
+                        switch (regexParts[i]) {
+                            case 'yyyy':
+                            case 'yy':
+                                year = parseInt(part, 10);
+                                if (year < 100) {
+                                    year += baseYear;
+                                    if (year - nowYear > 50) {
+                                        year -= 100;
+                                    } else if (nowYear - year > 50) {
+                                        year += 100;
+                                    }
+                                }
+                                break;
+                            case 'MMMM':
+                                tmp = arrayIndexOf(culture['months'], part);
+                                if (tmp > -1) month = tmp;
+                                break;
+                            case 'MMM':
+                                tmp = arrayIndexOf(culture['months_short'], part);
+                                if (tmp > -1) month = tmp;
+                                break;
+                            case 'MM':
+                            case 'M':
+                                month = parseInt(part, 10) - 1;
+                                break;
+                            case 'dddd':
+                                tmp = arrayIndexOf(culture['days'], part);
+                                if (tmp > -1) day = tmp;
+                                break;
+                            case 'ddd':
+                                tmp = arrayIndexOf(culture['days_short'], part);
+                                if (tmp > -1) day = tmp;
+                                break;
+                            case 'dd':
+                            case 'd':
+                                day = parseInt(part, 10);
+                                break;
+                            case 'HH':
+                            case 'H':
+                                hours = parseInt(part, 10);
+                                hours12 = false;
+                                break;
+                            case 'hh':
+                            case 'h':
+                                hours = parseInt(part, 10);
+                                hours12 = true;
+                                break;
+                            case 'mm':
+                            case 'm':
+                                minutes = parseInt(part, 10);
+                                break;
+                            case 'ss':
+                            case 's':
+                                seconds = parseInt(part, 10);
+                                break;
+                            case 'l':
+                                milliseconds = parseInt(part, 10);
+                                break;
+                            case 'L':
+                                milliseconds = parseInt(part, 10);
+                                if (milliseconds < 10) {
+                                    milliseconds *= 100;
+                                } else {
+                                    milliseconds *= 10;
+                                }
+                                break;
+                            case 'tt':
+                            case 't':
+                            case 'TT':
+                            case 'T':
+                                if (hours12) {
+                                    hoursTT = part.toLowerCase();
+                                    hours12 = false;
+                                }
+                                break;
+                            case 'Z':
+                            case 'UTC':
+                            case 'o':
+                                var tz = part.match(/(Z)|(?:GMT|UTC)?([+-][0-9]{2,4})(?:\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\))?/);
+                                if (tz[1] === 'Z') {
+                                    timezone = 0;
+                                } else if (tz[2]) {
+                                    timezone = (parseInt(tz[2].substr(1, 2), 10) || 0) * 60 + (parseInt(tz[2].substr(3), 10) || 0);
+                                    if (tz[2].charAt(0) === '-') {
+                                        timezone = -timezone;
+                                    }
+                                }
+                                break;
+                        }
+                    }
+
+                    if (year === null) year = now.getFullYear();
+                    if (month === null) month = now.getMonth();
+                    if (day === null) day = 1;
+                    if (hours12) {
+                        if (hoursTT === 'am' || hoursTT === 'a') {
+                            if (hours === 12) hours = 0;
+                        } else if (hoursTT === 'pm' || hoursTT === 'p') {
+                            if (hours < 12) hours += 12;
+                        }
+                    }
+                    var parsedDate = new Date(year, month, day, hours || 0, minutes || 0, seconds || 0, milliseconds || 0);
+                    if (timezone !== null) {
+                        timezone += parsedDate.getTimezoneOffset();
+                    }
+                    parsedDate.setMinutes(parsedDate.getMinutes() - timezone);
+
+                    return parsedDate;
+                };
+            };
+
+        })(),
 
         /**
         * Try to detect, based on the browser's localization, which is the short date format appropriate. 
