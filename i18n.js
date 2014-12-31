@@ -25,6 +25,7 @@
  SOFTWARE.
  */
 (function () {
+    'use strict';
 
     /**
      *
@@ -1290,4 +1291,4 @@
     /** @expse */
     this.i18n = i18n;
 
-})();
+}).call(this);
