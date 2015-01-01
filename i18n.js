@@ -733,8 +733,8 @@
         /**
         * Parses a date from user input, based on a supplied format. This is the counterpart of the formatDate function.
         * Supports all formatting codes known to humanity.
-        * Will automatically fall back if missing a digit i.e 1/2/34 for dd/MM/yyyy, unless `exact` is specified.
-        * Forgiving behavior with "incorrect" separators, i.e 01.05 instead of 01/05, unless `exact` is specified.
+        * Will automatically fall back if missing a digit i.e 1/2/34 for dd/MM/yyyy, unless `strict` is specified.
+        * Forgiving behavior with "incorrect" separators, i.e 01.05 instead of 01/05, unless `strict` is specified.
         * If year is missing, it will default to current year. Anything else will default to zero.
         *
         * This function actually uses the `createDateParser(...)` function, and caches the result.
@@ -744,10 +744,10 @@
         * @param {String?} format The format. Defaults to UTC ISO. (yyyy-MM-DD'T'HH:mm:ssZ)
         * @param {String|Object|null|?} culture Can accept a culture code, a culture object,
         *                                       or a simple "calendar" object which contains the keys "months", "months_short", "days" and "days_short"
-        * @param {Boolean} exact Should the parser be strict? false by default, forgiving missing digits etc.
+        * @param {Boolean} strict Should the parser be strict? false by default, forgiving missing digits etc.
         * @returns {Date} The parsed date
         */
-        parseDate: function (date, format, culture, exact) {
+        parseDate: function (date, format, culture, strict) {
             if (culture && typeof culture === 'string') {
                 culture = i18n.getLanguage(culture, true);
             }
@@ -760,11 +760,11 @@
                 format = 'yyyy-MM-dd\'T\'HH:mm:ssZ';
             }
 
-            var compiled = culture[exact ? '_compiledParsersE' : '_compiledParsers'];
-            if (!compiled) culture[exact ? '_compiledParsersE' : '_compiledParsers'] = compiled = {};
+            var compiled = culture[strict ? '_compiledParsersE' : '_compiledParsers'];
+            if (!compiled) culture[strict ? '_compiledParsersE' : '_compiledParsers'] = compiled = {};
 
             if (!compiled[format]) {
-                compiled[format] = i18n.createDateParser(format, culture, exact);
+                compiled[format] = i18n.createDateParser(format, culture, strict);
             }
 
             return compiled[format](date, culture);
@@ -773,14 +773,14 @@
         /**
          * Creates a date parser. This is generally used (and cached) by `parseDate(...)`.
          * Supports all formatting codes known to humanity.
-         * Will automatically fall back if missing a digit i.e 1/2/34 for dd/MM/yyyy, unless `exact` is specified.
-         * Forgiving behavior with "incorrect" separators, i.e 01.05 instead of 01/05, unless `exact` is specified.
+         * Will automatically fall back if missing a digit i.e 1/2/34 for dd/MM/yyyy, unless `strict` is specified.
+         * Forgiving behavior with "incorrect" separators, i.e 01.05 instead of 01/05, unless `strict` is specified.
          * If year is missing, it will default to current year. Anything else will default to zero.
          * @public
          * @expose
          * @param {String} format The format
          * @param {Object} culture An object which contains the keys "months", "months_short", "days" and "days_short"
-         * @param {Boolean} exact Should the parser be strict? false by default, forgiving missing digits etc.
+         * @param {Boolean} strict Should the parser be strict? false by default, forgiving missing digits etc.
          * @returns {function(String):Date} The parser function
          */
         createDateParser: (function () {
@@ -795,73 +795,43 @@
                 return regex;
             };
 
-            var strictParts = {
-                    'yyyy': function() { return '[0-9]{4}'; },
-                    'yy': function() { return '[0-9]{2}'; },
-                    'MMMM': function(culture) { return arrayToRegex(culture['months']); },
-                    'MMM': function(culture) { return arrayToRegex(culture['months_short']); },
-                    'MM': function() { return '[0-9]{2}'; },
-                    'M': function() { return '[0-9]{1,2}'; },
-                    'dddd': function(culture) { return arrayToRegex(culture['days']); },
-                    'ddd': function(culture) { return arrayToRegex(culture['days_short']); },
-                    'dd': function() { return '[0-9]{2}'; },
-                    'd': function() { return '[0-9]{1,2}'; },
-                    'HH': function() { return '[0-9]{2}'; },
-                    'H': function() { return '[0-9]{1,2}'; },
-                    'hh': function() { return '[0-9]{2}'; },
-                    'h': function() { return '[0-9]{1,2}'; },
-                    'mm': function() { return '[0-9]{2}'; },
-                    'm': function() { return '[0-9]{1,2}'; },
-                    'ss': function() { return '[0-9]{2}'; },
-                    's': function() { return '[0-9]{1,2}'; },
-                    'l': function() { return '[0-9]{3}'; },
-                    'L': function() { return '[0-9]{2}'; },
-                    'tt': function() { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
-                    't': function() { return 'a|A|p|P'; },
-                    'TT': function() { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
-                    'T': function() { return 'a|A|p|P'; },
-                    'Z': function() { return 'Z|(?:GMT|UTC)?[+-][0-9]{2,4}(?:\\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\\))?'; },
-                    'UTC': function() { return '[+-][0-9]{2,4}'; },
-                    'o': function() { return '[+-][0-9]{4}'; },
-                    'S': function() { return 'th|st|nd|rd'; }
-                },
-                unstrictParts = {
-                    'yyyy': function() { return '[0-9]{2}|[0-9]{4}'; },
-                    'yy': function() { return '[0-9]{2}'; },
-                    'MMMM': function(culture) { return arrayToRegex(culture['months']); },
-                    'MMM': function(culture) { return arrayToRegex(culture['months_short']); },
-                    'MM': function() { return '[0-9]{1,2}'; },
-                    'M': function() { return '[0-9]{1,2}'; },
-                    'dddd': function(culture) { return arrayToRegex(culture['days']); },
-                    'ddd': function(culture) { return arrayToRegex(culture['days_short']); },
-                    'dd': function() { return '[0-9]{1,2}'; },
-                    'd': function() { return '[0-9]{1,2}'; },
-                    'HH': function() { return '[0-9]{1,2}'; },
-                    'H': function() { return '[0-9]{1,2}'; },
-                    'hh': function() { return '[0-9]{1,2}'; },
-                    'h': function() { return '[0-9]{1,2}'; },
-                    'mm': function() { return '[0-9]{1,2}'; },
-                    'm': function() { return '[0-9]{1,2}'; },
-                    'ss': function() { return '[0-9]{1,2}'; },
-                    's': function() { return '[0-9]{1,2}'; },
-                    'l': function() { return '[0-9]{3}'; },
-                    'L': function() { return '[0-9]{2}'; },
-                    'tt': function() { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
-                    't': function() { return 'a|A|p|P'; },
-                    'TT': function() { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
-                    'T': function() { return 'a|A|p|P'; },
-                    'Z': function() { return 'Z|(?:GMT|UTC)?[+-][0-9]{2,4}(?:\\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\\))?'; },
-                    'UTC': function() { return '[+-][0-9]{2,4}'; },
-                    'o': function() { return '[+-][0-9]{4}'; },
-                    'S': function() { return 'th|st|nd|rd'; }
-                };
+            var regexMap = {
+                'yyyy': function(c, s) { return s ? '[0-9]{4}' : '[0-9]{2}|[0-9]{4}'; },
+                'yy': function(c, s) { return '[0-9]{2}'; },
+                'MMMM': function(c, s) { return arrayToRegex(c['months']); },
+                'MMM': function(c, s) { return arrayToRegex(c['months_short']); },
+                'MM': function(c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
+                'M': function(c, s) { return '[0-9]{1,2}'; },
+                'dddd': function(c, s) { return arrayToRegex(c['days']); },
+                'ddd': function(c, s) { return arrayToRegex(c['days_short']); },
+                'dd': function(c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
+                'd': function(c, s) { return '[0-9]{1,2}'; },
+                'HH': function(c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
+                'H': function(c, s) { return '[0-9]{1,2}'; },
+                'hh': function(c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
+                'h': function(c, s) { return '[0-9]{1,2}'; },
+                'mm': function(c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
+                'm': function(c, s) { return '[0-9]{1,2}'; },
+                'ss': function(c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
+                's': function(c, s) { return '[0-9]{1,2}'; },
+                'l': function(c, s) { return '[0-9]{3}'; },
+                'L': function(c, s) { return '[0-9]{2}'; },
+                'tt': function(c, s) { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
+                't': function(c, s) { return 'a|A|p|P'; },
+                'TT': function(c, s) { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
+                'T': function(c, s) { return 'a|A|p|P'; },
+                'Z': function(c, s) { return 'Z|(?:GMT|UTC)?[+-][0-9]{2,4}(?:\\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\\))?'; },
+                'UTC': function(c, s) { return '[+-][0-9]{2,4}'; },
+                'o': function(c, s) { return '[+-][0-9]{4}'; },
+                'S': function(c, s) { return 'th|st|nd|rd'; }
+            };
 
-            return function (format, culture, exact) {
+            return function (format, culture, strict) {
                 var formatParts = format.match(partsRgx);
                 var regex = '';
                 var regexParts = [];
 
-                var i, count, part;
+                var i, count, part, shouldStrict;
 
                 // Remove all empty groups
                 for (i = 0, count = formatParts.length; i < count; i++) {
@@ -875,21 +845,19 @@
                 // Go over all parts in the format, and create the parser regex part by part
                 for (i = 0, count = formatParts.length; i < count; i++) {
                     part = formatParts[i];
-                    if (strictParts.hasOwnProperty(part)) {
+                    if (regexMap.hasOwnProperty(part)) {
                         // An actually recognized part
-                        if (!exact &&
-                            (i === 0 || (i > 0 && !strictParts.hasOwnProperty(formatParts[i-1]))) &&
-                            (i === count - 1 || (i < count - 1 && !strictParts.hasOwnProperty(formatParts[i+1])))) {
-                            regex += '(' + unstrictParts[part](culture) + ')';
-                        } else {
-                            regex += '(' + strictParts[part](culture) + ')';
-                        }
+                        shouldStrict = strict || // We are specifically instructed to use strict mode
+                        (i > 0 && regexMap.hasOwnProperty(formatParts[i-1])) || // Previous part is not some kind of a boundary
+                        (i < count - 1 && regexMap.hasOwnProperty(formatParts[i+1])); // Next part is not some kind of a boundary
+
+                        regex += '(' + regexMap[part](culture, shouldStrict) + ')';
                         regexParts.push(part);
                     } else {
                         // A free text node
                         part = part.replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/, '$1'); // Remove enclosing quotes if there are...
                         part = part.replace(/\\\\/g, '\\'); // Unescape
-                        if (!exact && (part === '/' || part === '.' || part === '-')) {
+                        if (!strict && (part === '/' || part === '.' || part === '-')) {
                             regex += '([/\\.-])';
                         } else {
                             regex += '(' + regexEscape(part) + ')';
