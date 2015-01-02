@@ -117,13 +117,13 @@
      * Pad a value with characters on the left
      * @param {String} value the value to pad
      * @param {Number} length minimum length for the output
-     * @param {String} char the character to use for the padding
+     * @param {String} ch the character to use for the padding
      * @returns {*}
      */
-    var padLeft = function (value, length, char) {
+    var padLeft = function (value, length, ch) {
         value = value.toString();
         while (value.length < length) {
-            value = char + value;
+            value = ch + value;
         }
         return value;
     };
