@@ -584,7 +584,7 @@
         */
         physicalSize: function (bytes) {
             var ret,
-                loc = active('size_abbrs');
+                loc = active['size_abbrs'];
             if (bytes < 100) ret = { size: bytes, name: loc['b'] };
             else if (bytes < 101376) ret = { size: bytes / 1024.0, name: loc['kb'] };
             else if (bytes < 103809024) ret = { size: bytes / 1024.0 / 1024.0, name: loc['mb'] };
