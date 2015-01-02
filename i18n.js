@@ -422,9 +422,6 @@
 
             if (useOriginal) {
                 loc = originalLocs[activeLanguage] || active;
-                for (var i = 0, len = arguments.length; i < len; i++) {
-                    loc = loc[arguments[i]];
-                }
             } else {
                 loc = active;
             }
