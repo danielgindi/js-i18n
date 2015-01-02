@@ -1134,18 +1134,28 @@
 
             var localeOptions = active['__options__'];
 
-            value = value.replace(/(\{([^"\{}]+?)(:(html|json|url))?})|(\{\{([^"\{}]+?)(:([+# 0-9\.,]*[bcdieEfgouxXs]))?(:(html|json|url))?}})/g, function () {
+            value = value.replace(/(\{([^"\\{}]+?)(?:\:(html|json|url))?})|(\{\{([^"\\{}]+?)(?:\:([+# 0-9\.,]*[bcdieEfgouxXs]))?(?:\:(html|json|url))?}})|\\[{}\\]/g, function () {
                 var key, encoding;
+
+                if (arguments[0] === '\\{') {
+                    return '{';
+                }
+                else if (arguments[0] === '\\}') {
+                    return '}';
+                }
+                else if (arguments[0] === '\\\\') {
+                    return '\\';
+                }
 
                 if (arguments[1]) {
                     key = arguments[2];
-                    encoding = arguments[4];
+                    encoding = arguments[3];
 
                     return encodeValue(i18n.t(key), encoding);
-                } else if (arguments[5]) {
-                    key = arguments[6];
-                    encoding = arguments[10];
-                    var specifiers = arguments[8];
+                } else if (arguments[4]) {
+                    key = arguments[5];
+                    encoding = arguments[7];
+                    var specifiers = arguments[6];
 
                     var keys = key.split('.');
                     var value = data;
@@ -1160,10 +1170,10 @@
                 }
             });
 
-            value = value.replace(/t\(("[^"]+?"|'[^']+?'|[^,)]+?)(,\s*(\{.*?}))?\)/g, function () {
+            value = value.replace(/t\(("[^"]+?"|'[^']+?'|[^,)]+?)(?:,\s*(\{.*?}))?\)/g, function () {
 
                 var key = arguments[1],
-                    options = arguments[3];
+                    options = arguments[2];
                 try {
                     key = JSON.parse(key);
                 }
