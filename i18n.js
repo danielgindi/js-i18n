@@ -390,7 +390,9 @@
                 keys,
                 useOriginal = false,
                 loc,
-                options;
+                options,
+                i,
+                len;
 
             if (typeof args[0] === 'string' && typeof args[1] !== 'string') {
                 keys = args[argIndex++];
