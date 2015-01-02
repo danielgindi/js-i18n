@@ -399,7 +399,7 @@
                 } else {
                     keys = keys.split('.');
                 }
-            } else if ('length' in args[0]) {
+            } else if (typeof args[0] === 'object' && 'length' in args[0]) {
                 keys = args[argIndex++];
             } else if (typeof args[0] === 'string' && typeof args[1] === 'string') {
                 var arg;
