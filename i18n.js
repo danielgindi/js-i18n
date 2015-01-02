@@ -1132,6 +1132,8 @@
          */
         processLocalizedString: function (value, data) {
 
+            if (typeof value !== 'string') return value;
+
             var localeOptions = active['__options__'];
 
             value = value.replace(/(\{([^"\\{}]+?)(?:\:(html|json|url))?})|(\{\{([^"\\{}]+?)(?:\:([+# 0-9\.,]*[bcdieEfgouxXs]))?(?:\:(html|json|url))?}})|\\[{}\\]/g, function () {
