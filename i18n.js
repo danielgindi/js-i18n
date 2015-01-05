@@ -758,7 +758,16 @@
             culture = culture['calendar'] ? culture['calendar'] : culture;
 
             if (!format) {
-                format = 'yyyy-MM-dd\'T\'HH:mm:ssZ';
+                if ('parse' in Date) {
+                    return new Date(date);
+                } else {
+                    var parsed = this.parseDate(date, 'yyyy-MM-dd\'T\'HH:mm:ss[.l]Z', culture, true);
+                    if (isNaN(+parsed)) parsed = this.parseDate(date, 'yyyy-MM-dd', culture, true);
+                    if (isNaN(+parsed)) parsed = this.parseDate(date, 'ddd, dd, MMM yyyy HH:mm:ss Z', culture, true);
+                    if (isNaN(+parsed)) parsed = this.parseDate(date, 'dddd, dd-MMM-yy HH:mm:ss Z', culture, true);
+                    if (isNaN(+parsed)) parsed = this.parseDate(date, 'ddd MMM d HH:mm:ss yyyy', culture, true);
+                    return parsed;
+                }
             }
 
             var compiled = culture[strict ? '_compiledParsersE' : '_compiledParsers'];
