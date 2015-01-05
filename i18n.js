@@ -1108,8 +1108,8 @@
          *      Where the options part must be a valid JSON
          *      This stage is affected by previous stages (i.e placeholders can be JSON encoded for t(...) calls
          *
-         * localization format is {key.path[:html|json|url]}
-         * Placeholder format is {{key.path[:printf-specifier][:html|json|url]}} and accepts a printf specifier
+         * localization format is {key.path[:html|htmll|json|url]}
+         * Placeholder format is {{key.path[:printf-specifier][:html|htmll|json|url]}} and accepts a printf specifier
          *
          * Printf specifiers are in this order:
          *
