@@ -785,7 +785,7 @@
          * @returns {function(String):Date} The parser function
          */
         createDateParser: (function () {
-            var partsRgx = /('[^'\\]*(?:\\.[^'\\]*)*')|yyyy|yy|MMMM|MMM|MM|M|dddd|ddd|dd|d|HH|H|hh|h|mm|m|ss|s|l|L|tt|t|TT|T|Z|UTC|o|S|.+?/g;
+            var partsRgx = /('[^'\\]*(?:\\.[^'\\]*)*')|(\[[^\]\\]*(?:\\.[^\]\\]*)*])|yyyy|yy|MMMM|MMM|MM|M|dddd|ddd|dd|d|HH|H|hh|h|mm|m|ss|s|l|L|tt|t|TT|T|Z|UTC|o|S|.+?/g;
 
             var arrayToRegex = function (array) {
                 var regex = '';
@@ -828,44 +828,54 @@
             };
 
             return function (format, culture, strict) {
-                var formatParts = format.match(partsRgx);
+
                 var regex = '';
                 var regexParts = [];
 
-                var i, count, part, shouldStrict;
+                var processFormat = function (format) {
+                    var formatParts = format.match(partsRgx);
 
-                // Remove all empty groups
-                for (i = 0, count = formatParts.length; i < count; i++) {
-                    if (formatParts[i].length === 0) {
-                        formatParts.splice(i, 1);
-                        i--;
-                        count--;
-                    }
-                }
+                    var i, count, part, shouldStrict;
 
-                // Go over all parts in the format, and create the parser regex part by part
-                for (i = 0, count = formatParts.length; i < count; i++) {
-                    part = formatParts[i];
-                    if (regexMap.hasOwnProperty(part)) {
-                        // An actually recognized part
-                        shouldStrict = strict || // We are specifically instructed to use strict mode
-                        (i > 0 && regexMap.hasOwnProperty(formatParts[i - 1])) || // Previous part is not some kind of a boundary
-                        (i < count - 1 && regexMap.hasOwnProperty(formatParts[i + 1])); // Next part is not some kind of a boundary
-
-                        regex += '(' + regexMap[part](culture, shouldStrict) + ')';
-                        regexParts.push(part);
-                    } else {
-                        // A free text node
-                        part = part.replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/, '$1'); // Remove enclosing quotes if there are...
-                        part = part.replace(/\\\\/g, '\\'); // Unescape
-                        if (!strict && (part === '/' || part === '.' || part === '-')) {
-                            regex += '([/\\.-])';
-                        } else {
-                            regex += '(' + regexEscape(part) + ')';
+                    // Remove all empty groups
+                    for (i = 0, count = formatParts.length; i < count; i++) {
+                        if (formatParts[i].length === 0 || formatParts[i] === '[]') {
+                            formatParts.splice(i, 1);
+                            i--;
+                            count--;
                         }
-                        regexParts.push('');
                     }
-                }
+
+                    // Go over all parts in the format, and create the parser regex part by part
+                    for (i = 0, count = formatParts.length; i < count; i++) {
+                        part = formatParts[i];
+                        if (part[0] === '[' && part[part.length - 1] === ']') {
+                            regex += '(?:';
+                            processFormat(part.substr(1, part.length - 2));
+                            regex += ')?';
+                        } else if (regexMap.hasOwnProperty(part)) {
+                            // An actually recognized part
+                            shouldStrict = strict || // We are specifically instructed to use strict mode
+                            (i > 0 && regexMap.hasOwnProperty(formatParts[i - 1])) || // Previous part is not some kind of a boundary
+                            (i < count - 1 && regexMap.hasOwnProperty(formatParts[i + 1])); // Next part is not some kind of a boundary
+
+                            regex += '(' + regexMap[part](culture, shouldStrict) + ')';
+                            regexParts.push(part);
+                        } else {
+                            // A free text node
+                            part = part.replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/, '$1'); // Remove enclosing quotes if there are...
+                            part = part.replace(/\\\\/g, '\\'); // Unescape
+                            if (!strict && (part === '/' || part === '.' || part === '-')) {
+                                regex += '([/\\.-])';
+                            } else {
+                                regex += '(' + regexEscape(part) + ')';
+                            }
+                            regexParts.push('');
+                        }
+                    }
+                };
+
+                processFormat(format);
 
                 regex = new RegExp('^' + regex + '$');
 
