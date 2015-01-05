@@ -105,6 +105,8 @@
     var encodeValue = function (value, encoding) {
         if (encoding === 'html') {
             value = (value == null ? '' : (value + '')).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+        } else if (encoding === 'htmll') {
+            value = (value == null ? '' : (value + '')).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "<br />");
         } else if (encoding === 'json') {
             value = JSON.stringify(value);
         } else if (encoding === 'url') {
@@ -1092,6 +1094,7 @@
          *      Look for localization value specified in the form of:
          *          {key.subkey}
          *          {key.subkey:html}
+         *          {key.subkey:htmll} multiline HTML. replaces \n with <br />
          *          {key.subkey:json}
          *          {key.subkey:url}
          * Pass 2:
@@ -1135,7 +1138,7 @@
 
             var localeOptions = active['__options__'];
 
-            value = value.replace(/(\{([^"\\{}]+?)(?:\:(html|json|url))?})|(\{\{([^"\\{}]+?)(?:\:([+# 0-9\.,]*[bcdieEfgouxXs]))?(?:\:(html|json|url))?}})|\\[{}\\]/g, function () {
+            value = value.replace(/(\{([^"\\{}]+?)(?:\:(html|htmll|json|url))?})|(\{\{([^"\\{}]+?)(?:\:([+# 0-9\.,]*[bcdieEfgouxXs]))?(?:\:(html|htmll|json|url))?}})|\\[{}\\]/g, function () {
                 var key, encoding;
 
                 if (arguments[0] === '\\{') {
