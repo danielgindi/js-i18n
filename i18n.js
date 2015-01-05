@@ -1139,7 +1139,7 @@
 
             var localeOptions = active['__options__'];
 
-            value = value.replace(/(\{([^"\\{}]+?)(?:\:(html|htmll|json|url))?})|(\{\{([^"\\{}]+?)(?:\:([+# 0-9\.,]*[bcdieEfgouxXs]))?(?:\:(html|htmll|json|url))?}})|\\[{}\\]/g, function () {
+            value = value.replace(/(\{([^"\\{}]+?)(?::(html|htmll|json|url))?})|(\{\{([^"\\{}]+?)(?::([+# 0-9\.,]*[bcdieEfgouxXs]))?(?::(html|htmll|json|url))?}})|\\[{}\\]/g, function () {
                 var key, encoding;
 
                 if (arguments[0] === '\\{') {
