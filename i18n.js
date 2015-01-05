@@ -1025,6 +1025,7 @@
          * @public
          * @expose
          * @param {Number|String|null} value the value to format.
+         * @param {Number|null} thousands should we add a thousands separator
          * @returns {String} The formatted number as string.
          *                   If null or empty string is supplied, then an empty string is returned.
          *                   If a string was supplied, it is returned as-is.
@@ -1032,7 +1033,7 @@
         displayNumber: function (value, thousands) {
             if (value === '' || value == null) return '';
             if (typeof value === 'number') {
-                value = value.toString()
+                value = value.toString();
 
                 var decimalSep = active['__options__'].decimal,
                     thousandsSep = active['__options__'].thousands;
