@@ -61,7 +61,7 @@
     var regexEscape = function (string) {
         return string.replace(_escapeRgx, '\\$1');
     };
-    var arrayIndexOf = function(array, searchElement, fromIndex) {
+    var arrayIndexOf = function (array, searchElement, fromIndex) {
         var k, o = array;
         var len = o.length >>> 0;
         if (len === 0) {
@@ -290,7 +290,7 @@
 
             // Zero padding - should be like "0x00005" for length of 7, where the radii sign is before padding
             if (padCount && padZero) {
-                value = padLeft(value, padCount - sign.length - radiiSign.length , '0');
+                value = padLeft(value, padCount - sign.length - radiiSign.length, '0');
             }
 
             value = sign + radiiSign + value;
@@ -308,14 +308,14 @@
     var i18n = {
 
         /**
-        * Add a language to the localization object
-        * @public
-        * @expose
-        * @param {String} lang language code
-        * @param {Object} loc localization object
-        * @param {ADD_LANGUAGE_OPTIONS?} options options for this language
-        * @returns {i18n} self
-        */
+         * Add a language to the localization object
+         * @public
+         * @expose
+         * @param {String} lang language code
+         * @param {Object} loc localization object
+         * @param {ADD_LANGUAGE_OPTIONS?} options options for this language
+         * @returns {i18n} self
+         */
         add: function (lang, loc, options) {
             locs[lang] = loc;
             var locOptions = loc['__options__'] = {};
@@ -328,14 +328,14 @@
         },
 
         /**
-        * Get a language object from the localization
-        * @public
-        * @expose
-        * @param {String} lang language code
-        * @param {Boolean?} tryFallbacks should we try to search in fallback scenarios i.e. 'en' for 'en-US'
-        * @param {Boolean?} returnCode should we return the language code as well
-        * @returns {Object} language object
-        */
+         * Get a language object from the localization
+         * @public
+         * @expose
+         * @param {String} lang language code
+         * @param {Boolean?} tryFallbacks should we try to search in fallback scenarios i.e. 'en' for 'en-US'
+         * @param {Boolean?} returnCode should we return the language code as well
+         * @returns {Object} language object
+         */
         getLanguage: function (lang, tryFallbacks, returnCode) {
             if (tryFallbacks) {
                 if (lang === 'iw') lang = 'he'; // Fallback from Google's old spec, if the setting came from an old Android device
@@ -471,13 +471,13 @@
         },
 
         /**
-        * Set current active language using a language code. 
-        * The function will fall back from full to two-letter ISO codes (en-US to en) and from bad Android like codes (en_US to en).
-        * @public
-        * @expose
-        * @param {String} lang the language code to use
-        * @returns {i18n} self
-        */
+         * Set current active language using a language code.
+         * The function will fall back from full to two-letter ISO codes (en-US to en) and from bad Android like codes (en_US to en).
+         * @public
+         * @expose
+         * @param {String} lang the language code to use
+         * @returns {i18n} self
+         */
         setActiveLanguage: function (lang) {
             var found = this.getLanguage(lang, true, true);
             active = found.lang;
@@ -486,12 +486,12 @@
         },
 
         /**
-        * Set current active language using a language code found in the document's lang attribute or a relevant meta tag.
-        * Calls setActiveLanguage to do the dirty work after detecting language code.
-        * @public
-        * @expose
-        * @returns {i18n} self
-        */
+         * Set current active language using a language code found in the document's lang attribute or a relevant meta tag.
+         * Calls setActiveLanguage to do the dirty work after detecting language code.
+         * @public
+         * @expose
+         * @returns {i18n} self
+         */
         setActiveLanguageFromMetaTag: function () {
             var lang = document.documentElement.getAttribute('lang') || document.documentElement.getAttribute('xml:lang');
             if (!lang) {
@@ -508,21 +508,21 @@
         },
 
         /**
-        * Get the current active language code.
-        * @public
-        * @expose
-        * @returns {String} current active language code
-        */
+         * Get the current active language code.
+         * @public
+         * @expose
+         * @returns {String} current active language code
+         */
         getActiveLanguage: function () {
             return activeLanguage;
         },
 
         /**
-        * Get an array of the available language codes
-        * @public
-        * @expose
-        * @returns {Array<String>} array of the available language codes
-        */
+         * Get an array of the available language codes
+         * @public
+         * @expose
+         * @returns {Array<String>} array of the available language codes
+         */
         getAvailableLanguages: function () {
             var langs = [];
             for (var key in locs) {
@@ -533,15 +533,15 @@
         },
 
         /**
-        * Extend a specific language with data from a localized object.
-        * In order to allow easy storage and retrieval of extensions from DBs, the extension data is built with 
-        *   dotted syntax instead of a hieararchy of objects. i.e {"parent.child": "value"}
-        * @public
-        * @expose
-        * @param {String} lang language code
-        * @param {Object} data localization object
-        * @returns {i18n} self
-        */
+         * Extend a specific language with data from a localized object.
+         * In order to allow easy storage and retrieval of extensions from DBs, the extension data is built with
+         *   dotted syntax instead of a hieararchy of objects. i.e {"parent.child": "value"}
+         * @public
+         * @expose
+         * @param {String} lang language code
+         * @param {Object} data localization object
+         * @returns {i18n} self
+         */
         extendLanguage: function (lang, data) {
             try {
                 if (locs[lang]) {
@@ -555,12 +555,12 @@
         },
 
         /**
-        * Extend the entire languages array, with the help of the extendLanguage function.
-        * @public
-        * @expose
-        * @param {Object} data the localization extension object. each language as the key and extension object as the value.
-        * @returns {i18n} self
-        */
+         * Extend the entire languages array, with the help of the extendLanguage function.
+         * @public
+         * @expose
+         * @param {Object} data the localization extension object. each language as the key and extension object as the value.
+         * @returns {i18n} self
+         */
         extendLanguages: function (data) {
             try {
                 for (var lang in data) {
@@ -577,12 +577,12 @@
         },
 
         /**
-        * Retrieve a localized string of a physical file size, assuming that the "size_abbrs" key is available.
-        * @public
-        * @expose
-        * @param {Number} bytes the number of bytes
-        * @returns {LOCALIZED_PHYSICAL_FILE_SIZE} localized size
-        */
+         * Retrieve a localized string of a physical file size, assuming that the "size_abbrs" key is available.
+         * @public
+         * @expose
+         * @param {Number} bytes the number of bytes
+         * @returns {LOCALIZED_PHYSICAL_FILE_SIZE} localized size
+         */
         physicalSize: function (bytes) {
             var ret,
                 loc = active['size_abbrs'];
@@ -596,16 +596,16 @@
         },
 
         /**
-        * Format a date to a localized string, assuming that the "calendar" key is available.
-        * Supports all formatting codes known to humanity.
-        * @public
-        * @expose
-        * @param {Date} date The date to format
-        * @param {String} format The format
-        * @param {String|Object|null|?} culture Can accept a culture code, a culture object,
-        *                                       or a simple "calendar" object which contains the keys "months", "months_short", "days" and "days_short"
-        * @returns {String} A localized date
-        */
+         * Format a date to a localized string, assuming that the "calendar" key is available.
+         * Supports all formatting codes known to humanity.
+         * @public
+         * @expose
+         * @param {Date} date The date to format
+         * @param {String} format The format
+         * @param {String|Object|null|?} culture Can accept a culture code, a culture object,
+         *                                       or a simple "calendar" object which contains the keys "months", "months_short", "days" and "days_short"
+         * @returns {String} A localized date
+         */
         formatDate: (function () {
 
             var formatMatcher = /d{1,4}|M{1,4}|yy(?:yy)?|([HhmsTt])\1?|[LloSZ]|UTC|"[^"]*"|'[^']*'/g,
@@ -622,64 +622,64 @@
 
             /** @type {FlagMap} */
             var flagSubMapLocal = {
-                /** @param {Date} d */ /** @returns {Number} */ d: function (d) { return d.getDate(); },
-                /** @param {Date} d */ /** @returns {Number} */ D: function (d) { return d.getDay(); },
-                /** @param {Date} d */ /** @returns {Number} */ M: function (d) { return d.getMonth(); },
-                /** @param {Date} d */ /** @returns {Number} */ y: function (d) { return d.getFullYear(); },
-                /** @param {Date} d */ /** @returns {Number} */ H: function (d) { return d.getHours(); },
-                /** @param {Date} d */ /** @returns {Number} */ m: function (d) { return d.getMinutes(); },
-                /** @param {Date} d */ /** @returns {Number} */ s: function (d) { return d.getSeconds(); },
-                /** @param {Date} d */ /** @returns {Number} */ L: function (d) { return d.getMilliseconds(); },
-                /** @param {Date} d */ /** @returns {Number} */ o: function (d) { return 0; },
-                /** @param {Date} d */ /** @returns {String} */ utcd: function (d) { return ((d + '').match(timezone) || ['']).pop().replace(timezoneClip, ''); },
-                /** @param {Date} d */ /** @returns {String} */ utc: function (d) { var z = d.getTimezoneOffset(), s = (z > 0 ? '-' : '+'); z = z < 0 ? -z : z; var zm = z % 60; return s + pad((z - zm) / 60, 2) + (zm ? pad(zm, 2) : ''); }
+                /** @param {Date} d */ /** @returns {Number} */d: function (d) { return d.getDate(); },
+                /** @param {Date} d */ /** @returns {Number} */D: function (d) { return d.getDay(); },
+                /** @param {Date} d */ /** @returns {Number} */M: function (d) { return d.getMonth(); },
+                /** @param {Date} d */ /** @returns {Number} */y: function (d) { return d.getFullYear(); },
+                /** @param {Date} d */ /** @returns {Number} */H: function (d) { return d.getHours(); },
+                /** @param {Date} d */ /** @returns {Number} */m: function (d) { return d.getMinutes(); },
+                /** @param {Date} d */ /** @returns {Number} */s: function (d) { return d.getSeconds(); },
+                /** @param {Date} d */ /** @returns {Number} */L: function (d) { return d.getMilliseconds(); },
+                /** @param {Date} d */ /** @returns {Number} */o: function (d) { return 0; },
+                /** @param {Date} d */ /** @returns {String} */utcd: function (d) { return ((d + '').match(timezone) || ['']).pop().replace(timezoneClip, ''); },
+                /** @param {Date} d */ /** @returns {String} */utc: function (d) { var z = d.getTimezoneOffset(), s = (z > 0 ? '-' : '+'); z = z < 0 ? -z : z; var zm = z % 60; return s + pad((z - zm) / 60, 2) + (zm ? pad(zm, 2) : ''); }
             };
 
             /** @type {FlagMap} */
             var flagSubMapUtc = {
-                /** @param {Date} d */ /** @returns {Number} */ d: function (d) { return d.getUTCDate(); },
-                /** @param {Date} d */ /** @returns {Number} */ D: function (d) { return d.getUTCDay(); },
-                /** @param {Date} d */ /** @returns {Number} */ M: function (d) { return d.getUTCMonth(); },
-                /** @param {Date} d */ /** @returns {Number} */ y: function (d) { return d.getUTCFullYear(); },
-                /** @param {Date} d */ /** @returns {Number} */ H: function (d) { return d.getUTCHours(); },
-                /** @param {Date} d */ /** @returns {Number} */ m: function (d) { return d.getUTCMinutes(); },
-                /** @param {Date} d */ /** @returns {Number} */ s: function (d) { return d.getUTCSeconds(); },
-                /** @param {Date} d */ /** @returns {Number} */ L: function (d) { return d.getUTCMilliseconds(); },
-                /** @param {Date} d */ /** @returns {Number} */ o: function (d) { return d.getTimezoneOffset(); },
-                /** @param {Date} d */ /** @returns {String} */ utcd: function (d) { return "UTC" },
-                /** @param {Date} d */ /** @returns {String} */ utc: function (d) { return "Z" }
+                /** @param {Date} d */ /** @returns {Number} */d: function (d) { return d.getUTCDate(); },
+                /** @param {Date} d */ /** @returns {Number} */D: function (d) { return d.getUTCDay(); },
+                /** @param {Date} d */ /** @returns {Number} */M: function (d) { return d.getUTCMonth(); },
+                /** @param {Date} d */ /** @returns {Number} */y: function (d) { return d.getUTCFullYear(); },
+                /** @param {Date} d */ /** @returns {Number} */H: function (d) { return d.getUTCHours(); },
+                /** @param {Date} d */ /** @returns {Number} */m: function (d) { return d.getUTCMinutes(); },
+                /** @param {Date} d */ /** @returns {Number} */s: function (d) { return d.getUTCSeconds(); },
+                /** @param {Date} d */ /** @returns {Number} */L: function (d) { return d.getUTCMilliseconds(); },
+                /** @param {Date} d */ /** @returns {Number} */o: function (d) { return d.getTimezoneOffset(); },
+                /** @param {Date} d */ /** @returns {String} */utcd: function (d) { return "UTC" },
+                /** @param {Date} d */ /** @returns {String} */utc: function (d) { return "Z" }
             };
 
             /** @expose */
             var flagMap = {
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ d: function (o, fmap) { return fmap.d(o); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ dd: function (o, fmap) { return pad(fmap.d(o), 2); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ ddd: function (o, fmap, culture) { return culture['weekdays_short'][fmap.D(o)]; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ dddd: function (o, fmap, culture) { return culture['weekdays'][fmap.D(o)]; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ M: function (o, fmap) { return fmap.M(o) + 1; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ MM: function (o, fmap) { return pad(fmap.M(o) + 1, 2); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ MMM: function (o, fmap, culture) { return culture['months_short'][fmap.M(o)]; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ MMMM: function (o, fmap, culture) { return culture['months'][fmap.M(o)]; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ yy: function (o, fmap) { return String(fmap.y(o)).slice(2); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ yyyy: function (o, fmap) { return fmap.y(o); },
-                /** @expose @param {FlagMap} fmap */ /** @return {Number} */ h: function (o, fmap) { return fmap.H(o) % 12 || 12; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ hh: function (o, fmap) { return pad(fmap.H(o) % 12 || 12, 2); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ H: function (o, fmap) { return fmap.H(o); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ HH: function (o, fmap) { return pad(fmap.H(o), 2); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ m: function (o, fmap) { return fmap.m(o); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ mm: function (o, fmap) { return pad(fmap.m(o), 2); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ s: function (o, fmap) { return fmap.s(o); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ ss: function (o, fmap) { return pad(fmap.s(o), 2); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ l: function (o, fmap) { return pad(fmap.L(o), 3); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ L: function (o, fmap) { var L = fmap.L(o); return pad(L > 99 ? Math.round(L / 10) : L, 2); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ t: function (o, fmap) { return fmap.H(o) < 12 ? "a" : "p" },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ tt: function (o, fmap) { return fmap.H(o) < 12 ? "am" : "pm" },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ T: function (o, fmap) { return fmap.H(o) < 12 ? "A" : "P" },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ TT: function (o, fmap) { return fmap.H(o) < 12 ? "AM" : "PM" },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ Z: function (o, fmap) { return fmap.utc(o) },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ UTC: function (o, fmap) { return fmap.utcd(o) },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ o: function (o, fmap) { o = fmap.o(o); return (o > 0 ? "-" : "+") + pad(Math.floor(Math.abs(o) / 60) * 100 + Math.abs(o) % 60, 4) },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ S: function (o, fmap) { var d = fmap.d(o); return ["th", "st", "nd", "rd"][d % 10 > 3 ? 0 : (d % 100 - d % 10 != 10) * d % 10] }
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */d: function (o, fmap) { return fmap.d(o); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */dd: function (o, fmap) { return pad(fmap.d(o), 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ddd: function (o, fmap, culture) { return culture['weekdays_short'][fmap.D(o)]; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */dddd: function (o, fmap, culture) { return culture['weekdays'][fmap.D(o)]; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */M: function (o, fmap) { return fmap.M(o) + 1; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */MM: function (o, fmap) { return pad(fmap.M(o) + 1, 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */MMM: function (o, fmap, culture) { return culture['months_short'][fmap.M(o)]; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */MMMM: function (o, fmap, culture) { return culture['months'][fmap.M(o)]; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */yy: function (o, fmap) { return String(fmap.y(o)).slice(2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */yyyy: function (o, fmap) { return fmap.y(o); },
+                /** @expose @param {FlagMap} fmap */ /** @return {Number} */h: function (o, fmap) { return fmap.H(o) % 12 || 12; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */hh: function (o, fmap) { return pad(fmap.H(o) % 12 || 12, 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */H: function (o, fmap) { return fmap.H(o); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */HH: function (o, fmap) { return pad(fmap.H(o), 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */m: function (o, fmap) { return fmap.m(o); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */mm: function (o, fmap) { return pad(fmap.m(o), 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */s: function (o, fmap) { return fmap.s(o); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ss: function (o, fmap) { return pad(fmap.s(o), 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */l: function (o, fmap) { return pad(fmap.L(o), 3); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */L: function (o, fmap) { var L = fmap.L(o); return pad(L > 99 ? Math.round(L / 10) : L, 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */t: function (o, fmap) { return fmap.H(o) < 12 ? "a" : "p" },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */tt: function (o, fmap) { return fmap.H(o) < 12 ? "am" : "pm" },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */T: function (o, fmap) { return fmap.H(o) < 12 ? "A" : "P" },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */TT: function (o, fmap) { return fmap.H(o) < 12 ? "AM" : "PM" },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */Z: function (o, fmap) { return fmap.utc(o) },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */UTC: function (o, fmap) { return fmap.utcd(o) },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */o: function (o, fmap) { o = fmap.o(o); return (o > 0 ? "-" : "+") + pad(Math.floor(Math.abs(o) / 60) * 100 + Math.abs(o) % 60, 4) },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */S: function (o, fmap) { var d = fmap.d(o); return ["th", "st", "nd", "rd"][d % 10 > 3 ? 0 : (d % 100 - d % 10 != 10) * d % 10] }
             };
 
             return function (date, format, culture) {
@@ -732,22 +732,22 @@
         })(),
 
         /**
-        * Parses a date from user input, based on a supplied format. This is the counterpart of the formatDate function.
-        * Supports all formatting codes known to humanity.
-        * Will automatically fall back if missing a digit i.e 1/2/34 for dd/MM/yyyy, unless `strict` is specified.
-        * Forgiving behavior with "incorrect" separators, i.e 01.05 instead of 01/05, unless `strict` is specified.
-        * If year is missing, it will default to current year. Anything else will default to zero.
-        *
-        * This function actually uses the `createDateParser(...)` function, and caches the result.
-        * @public
-        * @expose
-        * @param {Date} date The date to format
-        * @param {String?} format The format. Defaults to UTC ISO. (yyyy-MM-DD'T'HH:mm:ssZ)
-        * @param {String|Object|null|?} culture Can accept a culture code, a culture object,
-        *                                       or a simple "calendar" object which contains the keys "months", "months_short", "days" and "days_short"
-        * @param {Boolean} strict Should the parser be strict? false by default, forgiving missing digits etc.
-        * @returns {Date} The parsed date
-        */
+         * Parses a date from user input, based on a supplied format. This is the counterpart of the formatDate function.
+         * Supports all formatting codes known to humanity.
+         * Will automatically fall back if missing a digit i.e 1/2/34 for dd/MM/yyyy, unless `strict` is specified.
+         * Forgiving behavior with "incorrect" separators, i.e 01.05 instead of 01/05, unless `strict` is specified.
+         * If year is missing, it will default to current year. Anything else will default to zero.
+         *
+         * This function actually uses the `createDateParser(...)` function, and caches the result.
+         * @public
+         * @expose
+         * @param {Date} date The date to format
+         * @param {String?} format The format. Defaults to UTC ISO. (yyyy-MM-DD'T'HH:mm:ssZ)
+         * @param {String|Object|null|?} culture Can accept a culture code, a culture object,
+         *                                       or a simple "calendar" object which contains the keys "months", "months_short", "days" and "days_short"
+         * @param {Boolean} strict Should the parser be strict? false by default, forgiving missing digits etc.
+         * @returns {Date} The parsed date
+         */
         parseDate: function (date, format, culture, strict) {
             if (culture && typeof culture === 'string') {
                 culture = i18n.getLanguage(culture, true);
@@ -797,34 +797,34 @@
             };
 
             var regexMap = {
-                'yyyy': function(c, s) { return s ? '[0-9]{4}' : '[0-9]{2}|[0-9]{4}'; },
-                'yy': function(c, s) { return '[0-9]{2}'; },
-                'MMMM': function(c, s) { return arrayToRegex(c['months']); },
-                'MMM': function(c, s) { return arrayToRegex(c['months_short']); },
-                'MM': function(c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
-                'M': function(c, s) { return '[0-9]{1,2}'; },
-                'dddd': function(c, s) { return arrayToRegex(c['days']); },
-                'ddd': function(c, s) { return arrayToRegex(c['days_short']); },
-                'dd': function(c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
-                'd': function(c, s) { return '[0-9]{1,2}'; },
-                'HH': function(c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
-                'H': function(c, s) { return '[0-9]{1,2}'; },
-                'hh': function(c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
-                'h': function(c, s) { return '[0-9]{1,2}'; },
-                'mm': function(c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
-                'm': function(c, s) { return '[0-9]{1,2}'; },
-                'ss': function(c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
-                's': function(c, s) { return '[0-9]{1,2}'; },
-                'l': function(c, s) { return '[0-9]{3}'; },
-                'L': function(c, s) { return '[0-9]{2}'; },
-                'tt': function(c, s) { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
-                't': function(c, s) { return 'a|A|p|P'; },
-                'TT': function(c, s) { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
-                'T': function(c, s) { return 'a|A|p|P'; },
-                'Z': function(c, s) { return 'Z|(?:GMT|UTC)?[+-][0-9]{2,4}(?:\\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\\))?'; },
-                'UTC': function(c, s) { return '[+-][0-9]{2,4}'; },
-                'o': function(c, s) { return '[+-][0-9]{4}'; },
-                'S': function(c, s) { return 'th|st|nd|rd'; }
+                'yyyy': function (c, s) { return s ? '[0-9]{4}' : '[0-9]{2}|[0-9]{4}'; },
+                'yy': function (c, s) { return '[0-9]{2}'; },
+                'MMMM': function (c, s) { return arrayToRegex(c['months']); },
+                'MMM': function (c, s) { return arrayToRegex(c['months_short']); },
+                'MM': function (c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
+                'M': function (c, s) { return '[0-9]{1,2}'; },
+                'dddd': function (c, s) { return arrayToRegex(c['days']); },
+                'ddd': function (c, s) { return arrayToRegex(c['days_short']); },
+                'dd': function (c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
+                'd': function (c, s) { return '[0-9]{1,2}'; },
+                'HH': function (c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
+                'H': function (c, s) { return '[0-9]{1,2}'; },
+                'hh': function (c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
+                'h': function (c, s) { return '[0-9]{1,2}'; },
+                'mm': function (c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
+                'm': function (c, s) { return '[0-9]{1,2}'; },
+                'ss': function (c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
+                's': function (c, s) { return '[0-9]{1,2}'; },
+                'l': function (c, s) { return '[0-9]{3}'; },
+                'L': function (c, s) { return '[0-9]{2}'; },
+                'tt': function (c, s) { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
+                't': function (c, s) { return 'a|A|p|P'; },
+                'TT': function (c, s) { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
+                'T': function (c, s) { return 'a|A|p|P'; },
+                'Z': function (c, s) { return 'Z|(?:GMT|UTC)?[+-][0-9]{2,4}(?:\\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\\))?'; },
+                'UTC': function (c, s) { return '[+-][0-9]{2,4}'; },
+                'o': function (c, s) { return '[+-][0-9]{4}'; },
+                'S': function (c, s) { return 'th|st|nd|rd'; }
             };
 
             return function (format, culture, strict) {
@@ -849,8 +849,8 @@
                     if (regexMap.hasOwnProperty(part)) {
                         // An actually recognized part
                         shouldStrict = strict || // We are specifically instructed to use strict mode
-                        (i > 0 && regexMap.hasOwnProperty(formatParts[i-1])) || // Previous part is not some kind of a boundary
-                        (i < count - 1 && regexMap.hasOwnProperty(formatParts[i+1])); // Next part is not some kind of a boundary
+                        (i > 0 && regexMap.hasOwnProperty(formatParts[i - 1])) || // Previous part is not some kind of a boundary
+                        (i < count - 1 && regexMap.hasOwnProperty(formatParts[i + 1])); // Next part is not some kind of a boundary
 
                         regex += '(' + regexMap[part](culture, shouldStrict) + ')';
                         regexParts.push(part);
@@ -1003,14 +1003,14 @@
         })(),
 
         /**
-        * Try to detect, based on the browser's localization, which is the short date format appropriate. 
-        * So allegedly, a US user will have MM/dd/yyyy and GB will have d/MM/yyyy.
-        * Currently browsers do not seem to behave and use the correct formats of the OS!
-        * @public
-        * @expose
-        * @param {String} fallback a fallback date for a case where the browser does not support this functionality.
-        * @returns {String} the detected format, the fallback, or dd/MM/yyyy as default.
-        */
+         * Try to detect, based on the browser's localization, which is the short date format appropriate.
+         * So allegedly, a US user will have MM/dd/yyyy and GB will have d/MM/yyyy.
+         * Currently browsers do not seem to behave and use the correct formats of the OS!
+         * @public
+         * @expose
+         * @param {String} fallback a fallback date for a case where the browser does not support this functionality.
+         * @returns {String} the detected format, the fallback, or dd/MM/yyyy as default.
+         */
         detectShortDateFormat: function (fallback) {
             if (!Date.prototype.toLocaleDateString) return fallback || 'dd/MM/yyyy';
 
@@ -1021,14 +1021,14 @@
         },
 
         /**
-        * Format a number for display using the correct decimal separator detected from the browser.
-        * @public
-        * @expose
-        * @param {Number|String|null} value the value to format. 
-        * @returns {String} The formatted number as string. 
-        *                   If null or empty string is supplied, then an empty string is returned. 
-        *                   If a string was supplied, it is returned as-is.
-        */
+         * Format a number for display using the correct decimal separator detected from the browser.
+         * @public
+         * @expose
+         * @param {Number|String|null} value the value to format.
+         * @returns {String} The formatted number as string.
+         *                   If null or empty string is supplied, then an empty string is returned.
+         *                   If a string was supplied, it is returned as-is.
+         */
         displayNumber: function (value, thousands) {
             if (value === '' || value == null) return '';
             if (typeof value === 'number') {
@@ -1067,14 +1067,14 @@
         },
 
         /**
-        * Parses a number from user input using the correct decimal separator detected from the browser.
-        * @public
-        * @expose
-        * @param {Number|String|null} value the value to parse. 
-        * @returns {Number|null} The parsed number.
-        *                   If null or empty string is supplied, then null is returned.
-        *                   If a number was supplied, it is returned as-is.
-        */
+         * Parses a number from user input using the correct decimal separator detected from the browser.
+         * @public
+         * @expose
+         * @param {Number|String|null} value the value to parse.
+         * @returns {Number|null} The parsed number.
+         *                   If null or empty string is supplied, then null is returned.
+         *                   If a number was supplied, it is returned as-is.
+         */
         parseNumber: function (value) {
             if (value === '' || value == null) return null;
 
@@ -1219,19 +1219,19 @@
     }
 
     /**
-    * @typedef LOCALIZED_PHYSICAL_FILE_SIZE
-    * */
+     * @typedef LOCALIZED_PHYSICAL_FILE_SIZE
+     * */
     var LOCALIZED_PHYSICAL_FILE_SIZE = {
         /**
-        * @expose
-        * @type {Number}
-        * */
+         * @expose
+         * @type {Number}
+         * */
         size: 0,
 
         /**
-        * @expose
-        * @type {String}
-        * */
+         * @expose
+         * @type {String}
+         * */
         name: ''
     };
 
