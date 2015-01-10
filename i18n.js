@@ -745,7 +745,7 @@
          * @param {String?} format The format. Defaults to UTC ISO. (yyyy-MM-DD'T'HH:mm:ssZ)
          * @param {String|Object|null|?} culture Can accept a culture code, a culture object,
          *                                       or a simple "calendar" object which contains the keys "months", "months_short", "days" and "days_short"
-         * @param {Boolean} strict Should the parser be strict? false by default, forgiving missing digits etc.
+         * @param {Boolean?} strict Should the parser be strict? false by default, forgiving missing digits etc.
          * @returns {Date} The parsed date
          */
         parseDate: function (date, format, culture, strict) {
