@@ -590,7 +590,7 @@
             else if (bytes < 101376) ret = { size: bytes / 1024.0, name: loc['kb'] };
             else if (bytes < 103809024) ret = { size: bytes / 1024.0 / 1024.0, name: loc['mb'] };
             else if (bytes < 106300440576) ret = { size: bytes / 1024.0 / 1024.0 / 1024.0, name: loc['gb'] };
-            else ret = { size: bytes / 1024.0 / 1024.0 / 1024.0 / 1024.0, name: loc['b'] };
+            else ret = { size: bytes / 1024.0 / 1024.0 / 1024.0 / 1024.0, name: loc['tb'] };
             ret.size = (Math.ceil(ret.size * 100) / 100); // Max two decimal points
             return ret;
         },
