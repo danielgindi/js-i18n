@@ -188,7 +188,7 @@
             }
 
             decimalSign = decimalSign || DEFAULT_DECIMAL_SEPARATOR;
-            thousandsSign = thousandsSign || DEFAULT_DECIMAL_SEPARATOR;
+            thousandsSign = thousandsSign || DEFAULT_THOUSANDS_SEPARATOR;
         }
 
         if (type === 'b') {
