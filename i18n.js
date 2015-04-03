@@ -471,6 +471,26 @@
         },
 
         /**
+         * Get the decimal seperator for the active locale
+         * @public
+         * @expose
+         * @returns {String} decimal separator
+         */
+        getDecimalSeparator: function () {
+            return active['__options__'].decimal;
+        },
+
+        /**
+         * Get the thousands seperator for the active locale
+         * @public
+         * @expose
+         * @returns {String} thousands separator
+         */
+        getThousandsSeparator: function () {
+            return active['__options__'].thousands;
+        },
+
+        /**
          * Set current active language using a language code.
          * The function will fall back from full to two-letter ISO codes (en-US to en) and from bad Android like codes (en_US to en).
          * @public
