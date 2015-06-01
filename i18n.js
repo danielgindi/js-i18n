@@ -1310,7 +1310,13 @@
         thousands: ','
     };
 
-    /** @expse */
+    /** @expose */
     this.i18n = i18n;
+
+    // Export for node.js
+    if (this['module'] && this['module']['exports']) {
+        /** @expose */
+        this['module']['exports'] = i18n;
+    }
 
 }).call(this);
