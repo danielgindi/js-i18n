@@ -1310,13 +1310,16 @@
         thousands: ','
     };
 
-    /** @expose */
-    this.i18n = i18n;
+    if (this['window'] && this['window'] === this) {
+        // Export for browser
 
-    // Export for node.js
-    if (this['module'] && this['module']['exports']) {
         /** @expose */
-        this['module']['exports'] = i18n;
+        this.i18n = i18n;
+    } else {
+        // Export for node.js
+
+        /** @expose */
+        module.exports = i18n;
     }
 
 }).call(this);
