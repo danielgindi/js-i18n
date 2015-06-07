@@ -227,7 +227,7 @@
                 if (precision === 0 && value === '0') {
                     value = '';
                 } else {
-                    value = padZero(value, precision, '0');
+                    value = padLeft(value, precision, '0');
                 }
             }
         }
