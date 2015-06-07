@@ -318,6 +318,7 @@
          */
         add: function (lang, loc, options) {
             locs[lang] = loc;
+            options = options || {};
             var locOptions = loc['__options__'] = {};
             locOptions.plural = options.plural || defaultPlural;
             locOptions.decimal = options.decimal || DEFAULT_DECIMAL_SEPARATOR;
