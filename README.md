@@ -32,7 +32,9 @@ If you like what you see here, and want to support the work being done in this r
 * Actually code, and issue pull requests
 * Spread the word
 * 
-[![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=CHRDHZE79YTMQ)
+Buy me a beer! 
+[![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=G6CELS3E997ZE)
+ Thanks :-)
 
 ## License
 
