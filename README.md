@@ -20,6 +20,7 @@ I don't have time yet for documentation, but figuring it out from the JSDocs in 
 * Detect browser's short date format (`i18n.detectShortDateFormat()`)
 * Format a number for display or parse a number (`i18n.displayNumber(...)`, `i18n.parseNumber(...)`)
 * Plurals support (Using `count` option when localizing a string, and retrieving plural _key from `plural()` callback in i18n options)
+* Gender support (Using `gender` option when localizing a string, and retrieving the `gender` key from the localized result, falling back to neutral gender)
 
 ## Me
 * Hi! I am Daniel Cohen Gindi. Or in short- Daniel.
