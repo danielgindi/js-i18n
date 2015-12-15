@@ -1189,7 +1189,7 @@
          *          {{data.value:2.5f:html}}
          *          {{data.value:html}}
          *
-     *          etc.
+         *          etc.
          *
          * Pass 2:
          *      Look for i18n calls in the form of:
