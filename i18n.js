@@ -465,6 +465,51 @@
             }
 
             if (options) {
+
+                if (typeof options['gender'] === 'string') { // Try for plural form
+
+                    if (typeof loc === 'object' &&
+                        !(loc instanceof Array)) {
+
+                        var gender = data['gender'], genderized;
+
+                        // Allow any gender, you can invent new ones...
+                        genderized = loc[gender];
+                        
+                        if (genderized === undefined) {
+                            
+                            // Fallback for male/female to m/f
+                            if (gender === 'male') {
+                                genderized = loc['m'];
+                            } else if (gender === 'female') {
+                                genderized = loc['f'];
+                            }
+
+                            // Fallbacks for neutral gender
+                            if (genderized === undefined) {
+                                genderized = loc['neutral'];
+                            }
+                            
+                            if (genderized === undefined) {
+                                genderized = loc['n'];
+                            }
+                            
+                            if (genderized === undefined) {
+                                genderized = loc[''];
+                            }
+
+                            // Default fallback
+                            
+                            if (genderized === undefined) {
+                                genderized = loc;
+                            }
+                        }
+
+                        loc = genderized;
+                    }
+
+                }
+                
                 loc = i18n.processLocalizedString(loc, options);
             }
 
