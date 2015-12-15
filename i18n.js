@@ -1138,23 +1138,26 @@
          *          {key.subkey:htmll} multiline HTML. replaces \n with <br />
          *          {key.subkey:json}
          *          {key.subkey:url}
-         * Pass 2:
-         *      Then look for placeholders from the passed options, in the form of:
+         *
+         *      And for placeholders from the passed options, in the form of:
          *          {{count}}
          *          {{data.value:2.5f:html}}
-         *          {{data.value:html}} etc.
-         * Pass 3:
+         *          {{data.value:html}}
+         *
+     *          etc.
+         *
+         * Pass 2:
          *      Look for i18n calls in the form of:
          *          t("key.path") t('key.path') t(key.path) or t("key.path", {"count": 5})
          *      Where the options part must be a valid JSON
          *      This stage is affected by previous stages (i.e placeholders can be JSON encoded for t(...) calls
          *
-         * localization format is {key.path[:html|htmll|json|url]}
-         * Placeholder format is {{key.path[:printf-specifier][:html|htmll|json|url]}} and accepts a printf specifier
+         * localization format is {key.path[:printf-specifier][:html|htmll|json|url]}
+         * Placeholder format is {{key.path[:printf-specifier][:html|htmll|json|url]}}
          *
          * Printf specifiers are in this order:
          *
-         *  "[+][ ][#][0][width][,][.precision]"
+         *  "[+][ ][#][0][width][,][.precision]" and then one of [bcdieEfgouxXs]
          *
          * +            : Forces to precede the result with a plus or minus sign (+ or -) even for positive numbers.
          * (space)      : If no sign is going to be written, a blank space is inserted before the value.
@@ -1179,40 +1182,41 @@
 
             var localeOptions = active['__options__'];
 
-            value = value.replace(/(\{([^"\\{}]+?)(?::(html|htmll|json|url))?})|(\{\{([^"\\{}]+?)(?::([+# 0-9\.,]*[bcdieEfgouxXs]))?(?::(html|htmll|json|url))?}})|\\[{}\\]/g, function () {
-                var key, encoding;
+            value = value.replace(/(\\*)(\{{1,2})([^:{}]+)(?::([^:{}]+))?(?::(html|htmll|json|url))?(}{1,2})/g, function () {
 
-                if (arguments[0] === '\\{') {
-                    return '{';
-                }
-                else if (arguments[0] === '\\}') {
-                    return '}';
-                }
-                else if (arguments[0] === '\\\\') {
-                    return '\\';
+                var precedingBackslahes = arguments[1];
+                var openingBrackes = arguments[2];
+
+                if ((precedingBackslahes.length & 1) === 1) {
+                    return arguments[0].substr(precedingBackslahes.length - (precedingBackslahes.length - 1) / 2);
                 }
 
-                if (arguments[1]) {
-                    key = arguments[2];
-                    encoding = arguments[3];
+                var value, key = arguments[3];
 
-                    return encodeValue(i18n.t(key), encoding);
-                } else if (arguments[4]) {
-                    key = arguments[5];
-                    encoding = arguments[7];
-                    var specifiers = arguments[6];
+                if (openingBrackes.length === 1) {
+
+                    value = i18n.t(key);
+
+                } else {
 
                     var keys = key.split('.');
-                    var value = data;
+                    value = data;
                     for (var i = 0, len = keys.length; i < len; i++) {
                         value = value[keys[i]];
                     }
 
-                    var processedValue = applySpecifiers(value, specifiers, localeOptions.decimal, localeOptions.thousands);
-                    processedValue = encodeValue(processedValue, encoding);
-
-                    return processedValue;
                 }
+
+                if (arguments[4] !== undefined) {
+                    value = applySpecifiers(value, arguments[4], localeOptions.decimal, localeOptions.thousands);
+                }
+                if (arguments[5] !== undefined) {
+                    value = encodeValue(value, arguments[5]);
+                }
+
+                return (precedingBackslahes.length ?
+                        precedingBackslahes.substr(precedingBackslahes.length / 2) :
+                        '') + value;
             });
 
             value = value.replace(/t\(("[^"]+?"|'[^']+?'|[^,)]+?)(?:,\s*(\{.*?}))?\)/g, function () {
