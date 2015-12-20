@@ -380,7 +380,9 @@
          * When the keypath is an Array, each part is a single part in the path.
          *
          * "original" specifies whether to access the original language, if the current language was extended. Default is false.
-         * "options" contains values that can be used in the localization, and possibly the "count" property which is used for plural values.
+         * "options" contains values that can be used in the localization, 
+         *   and possibly the "count" property which is used for plural values,
+         *   or the "gender" property for selecting a gender from the target value.
          *
          * @public
          * @expose
@@ -1183,7 +1185,7 @@
          *          {key.subkey:htmll} multiline HTML. replaces \n with <br />
          *          {key.subkey:json}
          *          {key.subkey:url}
-         *          
+         *
          *          NOTE: These keys will receive the `data` passed to `processLocalizedString`
          *
          *      And for placeholders from the passed options, in the form of:
