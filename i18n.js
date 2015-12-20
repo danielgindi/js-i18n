@@ -1183,6 +1183,8 @@
          *          {key.subkey:htmll} multiline HTML. replaces \n with <br />
          *          {key.subkey:json}
          *          {key.subkey:url}
+         *          
+         *          NOTE: These keys will receive the `data` passed to `processLocalizedString`
          *
          *      And for placeholders from the passed options, in the form of:
          *          {{count}}
@@ -1217,8 +1219,8 @@
          *                For g specifier: This is the maximum number of significant digits to be printed.
          *                For s: this is the maximum number of characters to be printed
          *
-         * @param {String} value the value to process
-         * @param {Object?} data the data for post processing
+         * @param {String} value - the value to process
+         * @param {Object?} data - the data for post processing. Passed to {...} specifiers too.
          * @returns {string} the processed value
          */
         processLocalizedString: function (value, data) {
@@ -1240,7 +1242,11 @@
 
                 if (openingBrackes.length === 1) {
 
-                    value = i18n.t(key);
+                    if (data) {
+                        value = i18n.t(key, data);
+                    } else {
+                        value = i18n.t(key);
+                    }
 
                 } else {
 
