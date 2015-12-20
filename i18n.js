@@ -473,7 +473,7 @@
                     if (typeof loc === 'object' &&
                         !(loc instanceof Array)) {
 
-                        var gender = data['gender'], genderized;
+                        var gender = options['gender'], genderized;
 
                         // Allow any gender, you can invent new ones...
                         genderized = loc[gender];
