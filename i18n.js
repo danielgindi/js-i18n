@@ -757,7 +757,9 @@
                 if (!culture) {
                     culture = active;
                 }
-                culture = culture['calendar'] ? culture['calendar'] : culture;
+                if (culture && culture['calendar']) {
+                    culture = culture['calendar'];
+                }
 
                 // Passing date through Date applies Date.parse, if necessary
                 if (!date) {
