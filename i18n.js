@@ -823,7 +823,9 @@
             if (!culture) {
                 culture = active;
             }
-            culture = culture['calendar'] ? culture['calendar'] : culture;
+            if (culture && culture['calendar']) {
+                culture = culture['calendar'];
+            }
 
             if (!format) {
                 if ('parse' in Date) {
