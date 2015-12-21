@@ -761,7 +761,7 @@
                     culture = culture['calendar'];
                 }
                 if (!culture) {
-                    culture = {}};
+                    culture = {};
                 }
 
                 // Passing date through Date applies Date.parse, if necessary
@@ -832,7 +832,7 @@
                 culture = culture['calendar'];
             }
             if (!culture) {
-                culture = {}};
+                culture = {};
             }
 
             if (!format) {
