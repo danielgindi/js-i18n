@@ -760,6 +760,9 @@
                 if (culture && culture['calendar']) {
                     culture = culture['calendar'];
                 }
+                if (!culture) {
+                    culture = {}};
+                }
 
                 // Passing date through Date applies Date.parse, if necessary
                 if (!date) {
@@ -828,6 +831,9 @@
             if (culture && culture['calendar']) {
                 culture = culture['calendar'];
             }
+            if (!culture) {
+                culture = {}};
+            }
 
             if (!format) {
                 if ('parse' in Date) {
@@ -843,7 +849,9 @@
             }
 
             var compiled = culture[strict ? '_compiledParsersE' : '_compiledParsers'];
-            if (!compiled) culture[strict ? '_compiledParsersE' : '_compiledParsers'] = compiled = {};
+            if (!compiled) {
+                culture[strict ? '_compiledParsersE' : '_compiledParsers'] = compiled = {};
+            }
 
             if (!compiled[format]) {
                 compiled[format] = i18n.createDateParser(format, culture, strict);
