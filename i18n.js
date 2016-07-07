@@ -1250,7 +1250,7 @@
             value = value.replace(/(\\*)(\{{1,2})([^:{}]+)(?::([^:{}]+))?(?::(html|htmll|json|url))?(}{1,2})/g, function () {
 
                 var precedingBackslahes = arguments[1];
-                var openingBrackes = arguments[2];
+                var openingBrackets = arguments[2];
 
                 if ((precedingBackslahes.length & 1) === 1) {
                     return arguments[0].substr(precedingBackslahes.length - (precedingBackslahes.length - 1) / 2);
@@ -1258,7 +1258,7 @@
 
                 var value, key = arguments[3];
 
-                if (openingBrackes.length === 1) {
+                if (openingBrackets.length === 1) {
 
                     value = i18n.t(key, data);
 
