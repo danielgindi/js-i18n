@@ -511,7 +511,11 @@
                     }
 
                 }
-                
+            }
+            
+            // Process special value contents based on whether there are `options` provided,
+            // or the value contains a special character
+            if (options || loc.indexOf('{') > -1) {
                 loc = i18n.processLocalizedString(loc, options);
             }
 
