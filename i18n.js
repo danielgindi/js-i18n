@@ -1260,18 +1260,17 @@
 
                 if (openingBrackes.length === 1) {
 
-                    if (data) {
-                        value = i18n.t(key, data);
-                    } else {
-                        value = i18n.t(key);
-                    }
+                    value = i18n.t(key, data);
 
                 } else {
 
                     var keys = key.split('.');
                     value = data;
-                    for (var i = 0, len = keys.length; i < len; i++) {
+                    for (var i = 0, len = keys.length; i < len && value; i++) {
                         value = value[keys[i]];
+                    }
+                    if (value == null) {
+                        value = '';
                     }
 
                 }
