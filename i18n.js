@@ -683,12 +683,7 @@
 
             var formatMatcher = /d{1,4}|M{1,4}|yy(?:yy)?|([HhmsTt])\1?|[LloSZ]|UTC|"[^"]*"|'[^']*'/g,
                 timezone = /\b(?:[PMCEA][SDP]T|[a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)?(?:[-+]\d{4})?)\b/g,
-                timezoneClip = /[^-+\dA-Z]/g,
-                pad = function (val, len) {
-                    val = val + '';
-                    while (val.length < len) val = '0' + val;
-                    return val;
-                };
+                timezoneClip = /[^-+\dA-Z]/g;
 
             /** @typedef {FlagMap} */
             var FlagMap = { d: null, D: null, M: null, y: null, H: null, m: null, s: null, L: null, o: null, utcd: null, utc: null };
@@ -705,7 +700,7 @@
                 /** @param {Date} d */ /** @returns {Number} */L: function (d) { return d.getMilliseconds(); },
                 /** @param {Date} d */ /** @returns {Number} */o: function (d) { return 0; },
                 /** @param {Date} d */ /** @returns {String} */utcd: function (d) { return ((d + '').match(timezone) || ['']).pop().replace(timezoneClip, ''); },
-                /** @param {Date} d */ /** @returns {String} */utc: function (d) { var z = d.getTimezoneOffset(), s = (z > 0 ? '-' : '+'); z = z < 0 ? -z : z; var zm = z % 60; return s + pad((z - zm) / 60, 2) + (zm ? pad(zm, 2) : ''); }
+                /** @param {Date} d */ /** @returns {String} */utc: function (d) { var z = d.getTimezoneOffset(), s = (z > 0 ? '-' : '+'); z = z < 0 ? -z : z; var zm = z % 60; return s + padLeft((z - zm) / 60, 2, '0') + (zm ? padLeft(zm, 2, '0') : ''); }
             };
 
             /** @type {FlagMap} */
@@ -726,32 +721,46 @@
             /** @expose */
             var flagMap = {
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */d: function (o, fmap) { return fmap.d(o); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */dd: function (o, fmap) { return pad(fmap.d(o), 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */dd: function (o, fmap) { return padLeft(fmap.d(o), 2, '0'); },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */ddd: function (o, fmap, culture) { return culture['weekdays_short'][fmap.D(o)]; },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */dddd: function (o, fmap, culture) { return culture['weekdays'][fmap.D(o)]; },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */M: function (o, fmap) { return fmap.M(o) + 1; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */MM: function (o, fmap) { return pad(fmap.M(o) + 1, 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */MM: function (o, fmap) { return padLeft(fmap.M(o) + 1, 2, '0'); },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */MMM: function (o, fmap, culture) { return culture['months_short'][fmap.M(o)]; },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */MMMM: function (o, fmap, culture) { return culture['months'][fmap.M(o)]; },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */yy: function (o, fmap) { return String(fmap.y(o)).slice(2); },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */yyyy: function (o, fmap) { return fmap.y(o); },
                 /** @expose @param {FlagMap} fmap */ /** @return {Number} */h: function (o, fmap) { return fmap.H(o) % 12 || 12; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */hh: function (o, fmap) { return pad(fmap.H(o) % 12 || 12, 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */hh: function (o, fmap) { return padLeft(fmap.H(o) % 12 || 12, 2, '0'); },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */H: function (o, fmap) { return fmap.H(o); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */HH: function (o, fmap) { return pad(fmap.H(o), 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */HH: function (o, fmap) { return padLeft(fmap.H(o), 2, '0'); },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */m: function (o, fmap) { return fmap.m(o); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */mm: function (o, fmap) { return pad(fmap.m(o), 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */mm: function (o, fmap) { return padLeft(fmap.m(o), 2, '0'); },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */s: function (o, fmap) { return fmap.s(o); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ss: function (o, fmap) { return pad(fmap.s(o), 2); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */l: function (o, fmap) { return pad(fmap.L(o), 3); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */L: function (o, fmap) { var L = fmap.L(o); return pad(L > 99 ? Math.round(L / 10) : L, 2); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ss: function (o, fmap) { return padLeft(fmap.s(o), 2, '0'); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */l: function (o, fmap) { return padLeft(fmap.L(o), 3, '0'); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */L: function (o, fmap) { var L = fmap.L(o); return padLeft(L > 99 ? Math.round(L / 10) : L, 2, '0'); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */f: function (o, fmap) { return Math.floor(fmap.L(o) / 100).toString(); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ff: function (o, fmap) { return padLeft(Math.floor(fmap.L(o) / 10), 2, '0'); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */fff: function (o, fmap) { return padLeft(fmap.L(o), 3, '0'); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ffff: function (o, fmap) { return padLeft(fmap.L(o), 3, '0') + '0'; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */fffff: function (o, fmap) { return padLeft(fmap.L(o), 3, '0') + '00'; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */ffffff: function (o, fmap) { return padLeft(fmap.L(o), 3, '0') + '000'; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */fffffff: function (o, fmap) { return padLeft(fmap.L(o), 3, '0') + '0000'; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */F: function (o, fmap) { var v = Math.floor(fmap.L(o) / 100); if (v === 0) return ''; return v.toString(); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */FF: function (o, fmap) { var v = Math.floor(fmap.L(o) / 10); if (v === 0) return ''; return padLeft(v, 2, '0'); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */FFF: function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0'); },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */FFFF: function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '0'; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */FFFFF: function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '00'; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */FFFFFF: function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '000'; },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */FFFFFFF: function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '0000'; },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */t: function (o, fmap) { return fmap.H(o) < 12 ? "a" : "p" },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */tt: function (o, fmap) { return fmap.H(o) < 12 ? "am" : "pm" },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */T: function (o, fmap) { return fmap.H(o) < 12 ? "A" : "P" },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */TT: function (o, fmap) { return fmap.H(o) < 12 ? "AM" : "PM" },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */Z: function (o, fmap) { return fmap.utc(o) },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */UTC: function (o, fmap) { return fmap.utcd(o) },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */o: function (o, fmap) { o = fmap.o(o); return (o > 0 ? "-" : "+") + pad(Math.floor(Math.abs(o) / 60) * 100 + Math.abs(o) % 60, 4) },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */o: function (o, fmap) { o = fmap.o(o); return (o > 0 ? "-" : "+") + padLeft(Math.floor(Math.abs(o) / 60) * 100 + Math.abs(o) % 60, 4, '0') },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */S: function (o, fmap) { var d = fmap.d(o); return ["th", "st", "nd", "rd"][d % 10 > 3 ? 0 : (d % 100 - d % 10 != 10) * d % 10] }
             };
 
@@ -844,7 +853,7 @@
                 if ('parse' in Date) {
                     return new Date(date);
                 } else {
-                    var parsed = this.parseDate(date, 'yyyy-MM-dd\'T\'HH:mm:ss[.l]Z', culture, true);
+                    var parsed = this.parseDate(date, 'yyyy-MM-dd\'T\'HH:mm:ss[.FFFFFFF]Z', culture, true);
                     if (isNaN(+parsed)) parsed = this.parseDate(date, 'yyyy-MM-dd', culture, true);
                     if (isNaN(+parsed)) parsed = this.parseDate(date, 'ddd, dd, MMM yyyy HH:mm:ss Z', culture, true);
                     if (isNaN(+parsed)) parsed = this.parseDate(date, 'dddd, dd-MMM-yy HH:mm:ss Z', culture, true);
@@ -879,7 +888,7 @@
          * @returns {function(String):Date} The parser function
          */
         createDateParser: (function () {
-            var partsRgx = /('[^'\\]*(?:\\.[^'\\]*)*')|(\[[^\]\\]*(?:\\.[^\]\\]*)*])|yyyy|yy|MMMM|MMM|MM|M|dddd|ddd|dd|d|HH|H|hh|h|mm|m|ss|s|l|L|tt|t|TT|T|Z|UTC|o|S|.+?/g;
+            var partsRgx = /('[^'\\]*(?:\\.[^'\\]*)*')|(\[[^\]\\]*(?:\\.[^\]\\]*)*])|yyyy|yy|MMMM|MMM|MM|M|dddd|ddd|dd|d|HH|H|hh|h|mm|m|ss|s|l|L|f|ff|fff|ffff|fffff|ffffff|fffffff|F|FF|FFF|FFFF|FFFFF|FFFFFF|FFFFFFF|tt|t|TT|T|Z|UTC|o|S|.+?/g;
 
             var arrayToRegex = function (array) {
                 var regex = '';
@@ -911,6 +920,20 @@
                 's': function (c, s) { return '[0-9]{1,2}'; },
                 'l': function (c, s) { return '[0-9]{3}'; },
                 'L': function (c, s) { return '[0-9]{2}'; },
+                'f': function (c, s) { return '[0-9]{1}'; },
+                'ff': function (c, s) { return '[0-9]{2}'; },
+                'fff': function (c, s) { return '[0-9]{3}'; },
+                'ffff': function (c, s) { return '[0-9]{4}'; },
+                'fffff': function (c, s) { return '[0-9]{5}'; },
+                'ffffff': function (c, s) { return '[0-9]{6}'; },
+                'fffffff': function (c, s) { return '[0-9]{7}'; },
+                'F': function (c, s) { return '[0-9]{0,1}'; },
+                'FF': function (c, s) { return '[0-9]{0,2}'; },
+                'FFF': function (c, s) { return '[0-9]{0,3}'; },
+                'FFFF': function (c, s) { return '[0-9]{0,4}'; },
+                'FFFFF': function (c, s) { return '[0-9]{0,5}'; },
+                'FFFFFF': function (c, s) { return '[0-9]{0,6}'; },
+                'FFFFFFF': function (c, s) { return '[0-9]{0,7}'; },
                 'tt': function (c, s) { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
                 't': function (c, s) { return 'a|A|p|P'; },
                 'TT': function (c, s) { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
@@ -1006,51 +1029,63 @@
                                     }
                                 }
                                 break;
+                                
                             case 'MMMM':
                                 tmp = arrayIndexOf(culture['months'], part);
                                 if (tmp > -1) month = tmp;
                                 break;
+                                
                             case 'MMM':
                                 tmp = arrayIndexOf(culture['months_short'], part);
                                 if (tmp > -1) month = tmp;
                                 break;
+                                
                             case 'MM':
                             case 'M':
                                 month = parseInt(part, 10) - 1;
                                 break;
+                                
                             case 'dddd':
                                 tmp = arrayIndexOf(culture['days'], part);
                                 if (tmp > -1) day = tmp;
                                 break;
+                                
                             case 'ddd':
                                 tmp = arrayIndexOf(culture['days_short'], part);
                                 if (tmp > -1) day = tmp;
                                 break;
+                                
                             case 'dd':
                             case 'd':
                                 day = parseInt(part, 10);
                                 break;
+                                
                             case 'HH':
                             case 'H':
                                 hours = parseInt(part, 10);
                                 hours12 = false;
                                 break;
+                                
                             case 'hh':
                             case 'h':
                                 hours = parseInt(part, 10);
                                 hours12 = true;
                                 break;
+                                
                             case 'mm':
                             case 'm':
                                 minutes = parseInt(part, 10);
                                 break;
+                                
                             case 'ss':
                             case 's':
                                 seconds = parseInt(part, 10);
                                 break;
+                                
                             case 'l':
                                 milliseconds = parseInt(part, 10);
                                 break;
+                                
                             case 'L':
                                 milliseconds = parseInt(part, 10);
                                 if (milliseconds < 10) {
@@ -1059,6 +1094,21 @@
                                     milliseconds *= 10;
                                 }
                                 break;
+                                
+                            case 'f': case 'ff': case 'fff': case 'ffff':
+                            case 'fffff': case 'ffffff': case 'fffffff':
+                            case 'F': case 'FF': case 'FFF': case 'FFFF':
+                            case 'FFFFF': case 'FFFFFF': case 'FFFFFFF':
+                                if (part.length > 3) {
+                                    part = part.substr(0, 3) + '.' + part.substr(3);
+                                } else if (part.length < 3) {
+                                    while (part.length < 3) {
+                                        part += '0';
+                                    }
+                                }
+                                milliseconds = parseFloat(part);
+                                break;
+                                
                             case 'tt':
                             case 't':
                             case 'TT':
@@ -1068,6 +1118,7 @@
                                     hours12 = false;
                                 }
                                 break;
+                                
                             case 'Z':
                             case 'UTC':
                             case 'o':
