@@ -779,10 +779,10 @@
                 }
 
                 // Passing date through Date applies Date.parse, if necessary
-                if (!date) {
+                if (date == null) {
                     date = new Date();
                 } else if (typeof date === 'string') {
-                    date = i18n.parse(date, null, culture);
+                    date = i18n.parseDate(date, null, culture);
                 } else if (date instanceof Date) {
                     // date = new Date(date);
                 } else if (typeof date === 'number') {
