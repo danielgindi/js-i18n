@@ -1299,7 +1299,7 @@
 
             var localeOptions = active['__options__'];
 
-            value = value.replace(/(\\*)(\{{1,2})([^:{}]+)(?::([^:{}]+))?(?::(html|htmll|json|url))?(}{1,2})/g, function () {
+            value = value.replace(/(\\*)(\{{1,2})([^:{}]+)(?::([^:{}]+))??(?::(html|htmll|json|url))?(}{1,2})/g, function () {
 
                 var precedingBackslahes = arguments[1];
                 var openingBrackets = arguments[2];
