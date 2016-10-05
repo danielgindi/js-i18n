@@ -99,7 +99,7 @@
     /**
      * Encodes the value {value} using the specified {encoding}
      * @param {String} value the value to encode
-     * @param {String} encoding either html, json or url
+     * @param {String} encoding for filters
      * @returns {*}
      */
     var encodeValue = function (value, encoding) {
@@ -111,7 +111,18 @@
             value = JSON.stringify(value);
         } else if (encoding === 'url') {
             value = encodeURIComponent(value);
+        } else if (encoding === 'lower') {
+            value = (value + '').toLowerCase();
+        } else if (encoding === 'upper') {
+            value = (value + '').toUpperCase();
+        } else if (encoding === 'upperfirst') {
+            value = value + '';
+            value = value[0].toUpperCase() + value.substr(1).toLowerCase();
+        } else if (encoding.substr(0, 7) === 'printf ') {
+            var localeOptions = active['__options__'];
+            value = applySpecifiers(value, encoding.substr(7), localeOptions.decimal, localeOptions.thousands);
         }
+
         return value;
     };
 
@@ -1249,17 +1260,24 @@
          * Pass 1:
          *      Look for localization value specified in the form of:
          *          {key.subkey}
-         *          {key.subkey:html}
-         *          {key.subkey:htmll} multiline HTML. replaces \n with <br />
-         *          {key.subkey:json}
-         *          {key.subkey:url}
+         *          {key.subkey|filter|filter...}
          *
-         *          NOTE: These keys will receive the `data` passed to `processLocalizedString`
+         *      Possible filters are:
+         *          html
+         *          htmll - multiline HTML. replaces \n with <br />
+         *          json
+         *          url
+         *          lower
+         *          upper
+         *          upperfirst
+         *          printf [print-specifier]
+         *
+         *      * `printf-specifier`s are C-style format specifiers. i.e. 2.5f
+         *      * The i18n keys will receive the `data` passed to `processLocalizedString`
          *
          *      And for placeholders from the passed options, in the form of:
          *          {{count}}
-         *          {{data.value:2.5f:html}}
-         *          {{data.value:html}}
+         *          {{data.value|filter|filter...}}
          *
          *          etc.
          *
@@ -1269,8 +1287,8 @@
          *      Where the options part must be a valid JSON
          *      This stage is affected by previous stages (i.e placeholders can be JSON encoded for t(...) calls
          *
-         * localization format is {key.path[:printf-specifier][:html|htmll|json|url]}
-         * Placeholder format is {{key.path[:printf-specifier][:html|htmll|json|url]}}
+         * localization format is {key.path[|filter][|filter]}
+         * Placeholder format is {{key.path[|filter][|filter]}}
          *
          * Printf specifiers are in this order:
          *
@@ -1297,18 +1315,22 @@
 
             if (typeof value !== 'string') return value;
 
-            var localeOptions = active['__options__'];
-
-            value = value.replace(/(\\*)(\{{1,2})([^:{}]+)(?::([^:{}]+))??(?::(html|htmll|json|url))?(}{1,2})/g, function () {
+            value = value.replace(/(\\*)(\{{1,2})([^|{}"]+)((?:\|[^|{}]+)*?)(}{1,2})/g, function () {
 
                 var precedingBackslahes = arguments[1];
                 var openingBrackets = arguments[2];
+                var closingBrackets = arguments[5];
 
                 if ((precedingBackslahes.length & 1) === 1) {
                     return arguments[0].substr(precedingBackslahes.length - (precedingBackslahes.length - 1) / 2);
                 }
 
+                if (openingBrackets.length > closingBrackets.length) {
+                    return arguments[0];
+                }
+
                 var value, key = arguments[3];
+                var i, len;
 
                 if (openingBrackets.length === 1) {
 
@@ -1318,7 +1340,7 @@
 
                     var keys = key.split('.');
                     value = data;
-                    for (var i = 0, len = keys.length; i < len && value; i++) {
+                    for (i = 0, len = keys.length; i < len && value; i++) {
                         value = value[keys[i]];
                     }
                     if (value == null) {
@@ -1327,11 +1349,16 @@
 
                 }
 
-                if (arguments[4] !== undefined) {
-                    value = applySpecifiers(value, arguments[4], localeOptions.decimal, localeOptions.thousands);
+                if (arguments[4]) {
+                    var filters = arguments[4].split('|');
+                    for (i = 0, len = filters.length; i < len; i++) {
+                        if (!filters[i]) continue;
+                        value = encodeValue(value, filters[i]);
+                    }
                 }
-                if (arguments[5] !== undefined) {
-                    value = encodeValue(value, arguments[5]);
+
+                if (closingBrackets.length > openingBrackets.length) {
+                    value = value + closingBrackets.substr(openingBrackets.length);
                 }
 
                 return (precedingBackslahes.length ?
