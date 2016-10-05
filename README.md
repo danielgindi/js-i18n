@@ -11,12 +11,13 @@ I don't have time yet for documentation, but figuring it out from the JSDocs in 
 
 * Supports both browser mode (global i18n) an node.js mode (module.exports)
 * Use `i18n.t(key)` or `i18n.t(key, subkey, subkey)` or `i18n.t([key, subkey, subkey])`
-* `t` function can be moved around without its namespace
+* `t` function can be moved around without its namespace (so you can do just `t('key.subkey')`)
 * Use `i18n.processLocalizedString(...)` to process a string as a template containing `t`s and `{...}`s.
 * Recurse by nesting `{...}` in `t(...)`s
 * Date parser (`i18n.parseDate(...)`) & formatter (`i18n.formatDate(...)`)
 * C style format specifiers
-* Modifiers for encoding string result to JSON, URL, HTML, HTML-with-newlines
+* Filters for encoding result to JSON, URL, HTML, HTML-with-newlines, lower-case, UPPER-CASE, Upperfirst, etc.
+* Filter for specifying printf (C-style) formats.
 * Detect browser's short date format (`i18n.detectShortDateFormat()`)
 * Format a number for display or parse a number (`i18n.displayNumber(...)`, `i18n.parseNumber(...)`)
 * Plurals support (Using `count` option when localizing a string, and retrieving plural _key from `plural()` callback in i18n options)
