@@ -1,30 +1,17 @@
-/*
- Written by Daniel Cohen Gindi (danielgindi@gmail.com)
- https://github.com/danielgindi/js-i18n
-
- The MIT License (MIT)
-
- Copyright (c) 2014 Daniel Cohen Gindi
-
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- SOFTWARE.
+/*!
+ * jquery.maskedinput 1.0.0
+ * https://github.com/danielgindi/js-i18n
  */
-(function () {
+
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        define([], factory);
+    } else if (typeof exports === 'object') {
+        module.exports = factory();
+    } else {
+        root.i18n = factory();
+    }
+})(this, function () {
     'use strict';
 
     /**
@@ -825,8 +812,8 @@
                         culture['am_short_upper'] || 'A' :
                         culture['pm_short_upper'] || 'P'
                 },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */TT: function (o, fmap, culture) { 
-                    return fmap.H(o) < 12 ? 
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */TT: function (o, fmap, culture) {
+                    return fmap.H(o) < 12 ?
                         culture['am_upper'] || 'AM' :
                         culture['pm_upper'] || 'PM'
                 },
@@ -1526,14 +1513,12 @@
         name: ''
     };
 
-
     /**
      * This function returns a key suffix for plural form, for the specified count.
      * @function PLURAL_FORM_FUNCTION
      * @param {Number} count the number that we need to inspect
      * @returns {string}
      */
-    function PLURAL_FORM_FUNCTION(count) { }
 
     /**
      * @typedef ADD_LANGUAGE_OPTIONS
@@ -1561,16 +1546,5 @@
         thousands: ','
     };
 
-    if (this['window'] && this['window'] === this) {
-        // Export for browser
-
-        /** @expose */
-        this.i18n = i18n;
-    } else {
-        // Export for node.js
-
-        /** @expose */
-        module.exports = i18n;
-    }
-
-}).call(this);
+    return i18n;
+});
