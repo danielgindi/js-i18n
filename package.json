@@ -1,6 +1,6 @@
 {
   "name": "js-i18n",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "An i18n library, with support for plurals, dates, C style format specifiers and more.",
   "main": "i18n.js",
   "repository": {
