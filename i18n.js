@@ -142,6 +142,51 @@
     };
 
     /**
+     * Generate an array of all lowercase-uppercase combinations of a given string
+     * @param {String} text
+     * @returns {String[]}
+     */
+    var generateAllCasePermutations = (function () {
+
+        var recurse = function (results, lower, upper, hasCase, pre) {
+
+            var len = lower.length, currenLen = pre.length;
+
+            while (currenLen < len && !hasCase[currenLen]) {
+                pre += lower[currenLen++];
+            }
+
+            if (currenLen === len) {
+                return results.push(pre);
+            }
+
+            recurse(results, lower, upper, hasCase, pre + lower[currenLen]);
+            recurse(results, lower, upper, hasCase, pre + upper[currenLen]);
+        };
+
+        return function (text) {
+            text = text + '';
+            if (!text) return text;
+
+            var results = [];
+            var lower = text.split('');
+            var upper = [];
+            var hasCase = [];
+
+            for (var i = 0, len = text.length; i < len; i++) {
+                lower[i] = lower[i].toLowerCase();
+                upper[i] = lower[i].toUpperCase();
+                hasCase[i] = upper[i] !== lower[i];
+            }
+
+            recurse(results, lower, upper, hasCase, '');
+
+            return results;
+        };
+
+    })();
+    
+    /**
      * This will process value with printf specifier format
      * @param {*} value the value to process
      * @param {String?} specifiers the printf style specifiers. i.e. '2.5f', 'E', '#x'
@@ -391,7 +436,7 @@
          * When the keypath is an Array, each part is a single part in the path.
          *
          * "original" specifies whether to access the original language, if the current language was extended. Default is false.
-         * "options" contains values that can be used in the localization, 
+         * "options" contains values that can be used in the localization,
          *   and possibly the "count" property which is used for plural values,
          *   or the "gender" property for selecting a gender from the target value.
          *
@@ -488,9 +533,9 @@
 
                         // Allow any gender, you can invent new ones...
                         genderized = loc[gender];
-                        
+
                         if (genderized === undefined) {
-                            
+
                             // Fallback for male/female to m/f
                             if (gender === 'male') {
                                 genderized = loc['m'];
@@ -502,17 +547,17 @@
                             if (genderized === undefined) {
                                 genderized = loc['neutral'];
                             }
-                            
+
                             if (genderized === undefined) {
                                 genderized = loc['n'];
                             }
-                            
+
                             if (genderized === undefined) {
                                 genderized = loc[''];
                             }
 
                             // Default fallback
-                            
+
                             if (genderized === undefined) {
                                 genderized = loc;
                             }
@@ -523,10 +568,10 @@
 
                 }
             }
-            
+
             // Process special value contents based on whether there are `options` provided,
             // or the value contains a special character
-            if (options || 
+            if (options ||
                 (typeof loc === 'string' && (loc.indexOf('{') > -1 || loc.indexOf('t(') > -1))) {
                 loc = i18n.processLocalizedString(loc, options);
             }
@@ -765,10 +810,26 @@
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */FFFFF: function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '00'; },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */FFFFFF: function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '000'; },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */FFFFFFF: function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '0000'; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */t: function (o, fmap) { return fmap.H(o) < 12 ? "a" : "p" },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */tt: function (o, fmap) { return fmap.H(o) < 12 ? "am" : "pm" },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */T: function (o, fmap) { return fmap.H(o) < 12 ? "A" : "P" },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */TT: function (o, fmap) { return fmap.H(o) < 12 ? "AM" : "PM" },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */t: function (o, fmap, culture) {
+                    return fmap.H(o) < 12 ?
+                        culture['am_short_lower'] || 'a' :
+                        culture['pm_short_lower'] || 'p'
+                },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */tt: function (o, fmap, culture) {
+                    return fmap.H(o) < 12 ?
+                        culture['am_lower'] || 'am' :
+                        culture['am_lower'] || 'pm'
+                },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */T: function (o, fmap, culture) {
+                    return fmap.H(o) < 12 ?
+                        culture['am_short_upper'] || 'A' :
+                        culture['pm_short_upper'] || 'P'
+                },
+                /** @expose @param {FlagMap} fmap */ /** @return {string} */TT: function (o, fmap, culture) { 
+                    return fmap.H(o) < 12 ? 
+                        culture['am_upper'] || 'AM' :
+                        culture['pm_upper'] || 'PM'
+                },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */Z: function (o, fmap) { return fmap.utc(o) },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */UTC: function (o, fmap) { return fmap.utcd(o) },
                 /** @expose @param {FlagMap} fmap */ /** @return {string} */o: function (o, fmap) { o = fmap.o(o); return (o > 0 ? "-" : "+") + padLeft(Math.floor(Math.abs(o) / 60) * 100 + Math.abs(o) % 60, 4, '0') },
@@ -945,10 +1006,46 @@
                 'FFFFF': function (c, s) { return '[0-9]{0,5}'; },
                 'FFFFFF': function (c, s) { return '[0-9]{0,6}'; },
                 'FFFFFFF': function (c, s) { return '[0-9]{0,7}'; },
-                'tt': function (c, s) { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
-                't': function (c, s) { return 'a|A|p|P'; },
-                'TT': function (c, s) { return 'am|Am|aM|AM|pm|Pm|pM|PM'; },
-                'T': function (c, s) { return 'a|A|p|P'; },
+                'tt': function (c, s) {
+                    var am1 = c['am_lower'] || 'am';
+                    var pm1 = c['pm_lower'] || 'pm';
+                    var am2 = c['am_upper'] || 'AM';
+                    var pm2 = c['pm_upper'] || 'PM';
+
+                    var all = generateAllCasePermutations(am1)
+                        .concat(generateAllCasePermutations(pm1));
+
+                    if (am1.toLowerCase() !== am2.toLowerCase()) {
+                        all = all.concat(generateAllCasePermutations(am2));
+                    }
+
+                    if (pm1.toLowerCase() !== pm2.toLowerCase()) {
+                        all = all.concat(generateAllCasePermutations(pm2));
+                    }
+
+                    return arrayToRegex(all);
+                },
+                't': function (c, s) {
+                    var am1 = c['am_short_lower'] || 'a';
+                    var pm1 = c['pm_short_lower'] || 'p';
+                    var am2 = c['am_short_upper'] || 'A';
+                    var pm2 = c['pm_short_upper'] || 'P';
+
+                    var all = generateAllCasePermutations(am1)
+                        .concat(generateAllCasePermutations(pm1));
+
+                    if (am1.toLowerCase() !== am2.toLowerCase()) {
+                        all = all.concat(generateAllCasePermutations(am2));
+                    }
+
+                    if (pm1.toLowerCase() !== pm2.toLowerCase()) {
+                        all = all.concat(generateAllCasePermutations(pm2));
+                    }
+
+                    return arrayToRegex(all);
+                },
+                'TT': function (c, s) { return regexMap['tt'](c, s); },
+                'T': function (c, s) { return regexMap['t'](c, s); },
                 'Z': function (c, s) { return 'Z|(?:GMT|UTC)?[+-][0-9]{2,4}(?:\\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\\))?'; },
                 'UTC': function (c, s) { return '[+-][0-9]{2,4}'; },
                 'o': function (c, s) { return '[+-][0-9]{4}'; },
@@ -984,8 +1081,8 @@
                         } else if (regexMap.hasOwnProperty(part)) {
                             // An actually recognized part
                             shouldStrict = strict || // We are specifically instructed to use strict mode
-                            (i > 0 && regexMap.hasOwnProperty(formatParts[i - 1])) || // Previous part is not some kind of a boundary
-                            (i < count - 1 && regexMap.hasOwnProperty(formatParts[i + 1])); // Next part is not some kind of a boundary
+                                (i > 0 && regexMap.hasOwnProperty(formatParts[i - 1])) || // Previous part is not some kind of a boundary
+                                (i < count - 1 && regexMap.hasOwnProperty(formatParts[i + 1])); // Next part is not some kind of a boundary
 
                             regex += '(' + regexMap[part](culture, shouldStrict) + ')';
                             regexParts.push(part);
@@ -1040,63 +1137,63 @@
                                     }
                                 }
                                 break;
-                                
+
                             case 'MMMM':
                                 tmp = arrayIndexOf(culture['months'], part);
                                 if (tmp > -1) month = tmp;
                                 break;
-                                
+
                             case 'MMM':
                                 tmp = arrayIndexOf(culture['months_short'], part);
                                 if (tmp > -1) month = tmp;
                                 break;
-                                
+
                             case 'MM':
                             case 'M':
                                 month = parseInt(part, 10) - 1;
                                 break;
-                                
+
                             case 'dddd':
                                 tmp = arrayIndexOf(culture['days'], part);
                                 if (tmp > -1) day = tmp;
                                 break;
-                                
+
                             case 'ddd':
                                 tmp = arrayIndexOf(culture['days_short'], part);
                                 if (tmp > -1) day = tmp;
                                 break;
-                                
+
                             case 'dd':
                             case 'd':
                                 day = parseInt(part, 10);
                                 break;
-                                
+
                             case 'HH':
                             case 'H':
                                 hours = parseInt(part, 10);
                                 hours12 = false;
                                 break;
-                                
+
                             case 'hh':
                             case 'h':
                                 hours = parseInt(part, 10);
                                 hours12 = true;
                                 break;
-                                
+
                             case 'mm':
                             case 'm':
                                 minutes = parseInt(part, 10);
                                 break;
-                                
+
                             case 'ss':
                             case 's':
                                 seconds = parseInt(part, 10);
                                 break;
-                                
+
                             case 'l':
                                 milliseconds = parseInt(part, 10);
                                 break;
-                                
+
                             case 'L':
                                 milliseconds = parseInt(part, 10);
                                 if (milliseconds < 10) {
@@ -1105,21 +1202,21 @@
                                     milliseconds *= 10;
                                 }
                                 break;
-                                
+
                             case 'f': case 'ff': case 'fff': case 'ffff':
                             case 'fffff': case 'ffffff': case 'fffffff':
                             case 'F': case 'FF': case 'FFF': case 'FFFF':
                             case 'FFFFF': case 'FFFFFF': case 'FFFFFFF':
-                                if (part.length > 3) {
-                                    part = part.substr(0, 3) + '.' + part.substr(3);
-                                } else if (part.length < 3) {
-                                    while (part.length < 3) {
-                                        part += '0';
-                                    }
+                            if (part.length > 3) {
+                                part = part.substr(0, 3) + '.' + part.substr(3);
+                            } else if (part.length < 3) {
+                                while (part.length < 3) {
+                                    part += '0';
                                 }
-                                milliseconds = parseFloat(part);
-                                break;
-                                
+                            }
+                            milliseconds = parseFloat(part);
+                            break;
+
                             case 'tt':
                             case 't':
                             case 'TT':
@@ -1129,7 +1226,7 @@
                                     hours12 = false;
                                 }
                                 break;
-                                
+
                             case 'Z':
                             case 'UTC':
                             case 'o':
@@ -1150,9 +1247,11 @@
                     if (month === null) month = now.getMonth();
                     if (day === null) day = 1;
                     if (hours12) {
-                        if (hoursTT === 'am' || hoursTT === 'a') {
+                        if (hoursTT === (culture['am_lower'] || 'am').toLowerCase() ||
+                            hoursTT === (culture['am_short_lower'] || 'a').toLowerCase()) {
                             if (hours === 12) hours = 0;
-                        } else if (hoursTT === 'pm' || hoursTT === 'p') {
+                        } else if (hoursTT === (culture['pm_lower'] || 'pm').toLowerCase() ||
+                            hoursTT === (culture['pm_short_lower'] || 'p').toLowerCase()) {
                             if (hours < 12) hours += 12;
                         }
                     }
