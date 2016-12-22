@@ -951,7 +951,7 @@
          * This function actually uses the `createDateParser(...)` function, and caches the result.
          * @public
          * @expose
-         * @param {Date} date The date to format
+         * @param {String} date The date to parse
          * @param {String?} format The format. Defaults to UTC ISO. (yyyy-MM-DD'T'HH:mm:ssZ)
          * @param {String|Object|null|?} culture Can accept a culture code, a culture object,
          *                                       or a simple "calendar" object which contains the keys "months", "months_short", "days" and "days_short"
