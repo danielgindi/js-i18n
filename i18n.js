@@ -1,5 +1,5 @@
 /*!
- * jquery.maskedinput 1.0.0
+ * js-i18n
  * https://github.com/danielgindi/js-i18n
  */
 
@@ -115,7 +115,7 @@
 
     /**
      * Pad a value with characters on the left
-     * @param {String} value the value to pad
+     * @param {String|Number} value the value to pad
      * @param {Number} length minimum length for the output
      * @param {String} ch the character to use for the padding
      * @returns {*}
@@ -353,7 +353,6 @@
         /**
          * Add a language to the localization object
          * @public
-         * @expose
          * @param {String} lang language code
          * @param {Object} loc localization object
          * @param {ADD_LANGUAGE_OPTIONS?} options options for this language
@@ -374,7 +373,6 @@
         /**
          * Get a language object from the localization
          * @public
-         * @expose
          * @param {String} lang language code
          * @param {Boolean?} tryFallbacks should we try to search in fallback scenarios i.e. 'en' for 'en-US'
          * @param {Boolean?} returnCode should we return the language code as well
@@ -428,7 +426,6 @@
          *   or the "gender" property for selecting a gender from the target value.
          *
          * @public
-         * @expose
          * @param {...}
          * @returns {*} localized value or object
          */
@@ -569,7 +566,6 @@
         /**
          * Get the decimal seperator for the active locale
          * @public
-         * @expose
          * @returns {String} decimal separator
          */
         getDecimalSeparator: function () {
@@ -579,7 +575,6 @@
         /**
          * Get the thousands seperator for the active locale
          * @public
-         * @expose
          * @returns {String} thousands separator
          */
         getThousandsSeparator: function () {
@@ -590,7 +585,6 @@
          * Set current active language using a language code.
          * The function will fall back from full to two-letter ISO codes (en-US to en) and from bad Android like codes (en_US to en).
          * @public
-         * @expose
          * @param {String} lang the language code to use
          * @returns {i18n} self
          */
@@ -605,7 +599,6 @@
          * Set current active language using a language code found in the document's lang attribute or a relevant meta tag.
          * Calls setActiveLanguage to do the dirty work after detecting language code.
          * @public
-         * @expose
          * @returns {i18n} self
          */
         setActiveLanguageFromMetaTag: function () {
@@ -626,7 +619,6 @@
         /**
          * Get the current active language code.
          * @public
-         * @expose
          * @returns {String} current active language code
          */
         getActiveLanguage: function () {
@@ -636,7 +628,6 @@
         /**
          * Get an array of the available language codes
          * @public
-         * @expose
          * @returns {Array<String>} array of the available language codes
          */
         getAvailableLanguages: function () {
@@ -653,7 +644,6 @@
          * In order to allow easy storage and retrieval of extensions from DBs, the extension data is built with
          *   dotted syntax instead of a hieararchy of objects. i.e {"parent.child": "value"}
          * @public
-         * @expose
          * @param {String} lang language code
          * @param {Object} data localization object
          * @returns {i18n} self
@@ -673,7 +663,6 @@
         /**
          * Extend the entire languages array, with the help of the extendLanguage function.
          * @public
-         * @expose
          * @param {Object} data the localization extension object. each language as the key and extension object as the value.
          * @returns {i18n} self
          */
@@ -695,7 +684,6 @@
         /**
          * Retrieve a localized string of a physical file size, assuming that the "size_abbrs" key is available.
          * @public
-         * @expose
          * @param {Number} bytes the number of bytes
          * @returns {LOCALIZED_PHYSICAL_FILE_SIZE} localized size
          */
@@ -715,7 +703,6 @@
          * Format a date to a localized string, assuming that the "calendar" key is available.
          * Supports all formatting codes known to humanity.
          * @public
-         * @expose
          * @param {Date} date The date to format
          * @param {String} format The format
          * @param {String|Object|null|?} culture Can accept a culture code, a culture object,
@@ -728,99 +715,176 @@
                 timezone = /\b(?:[PMCEA][SDP]T|[a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)?(?:[-+]\d{4})?)\b/g,
                 timezoneClip = /[^-+\dA-Z]/g;
 
-            /** @typedef {FlagMap} */
-            var FlagMap = { d: null, D: null, M: null, y: null, H: null, m: null, s: null, L: null, o: null, utcd: null, utc: null };
+            /** @typedef {{d: function, D: function, M: function, y: function, H: function, m: function, s: function, L: function, o: function, utcd: function, utc: function}} FlagMap */
 
             /** @type {FlagMap} */
             var flagSubMapLocal = {
-                /** @param {Date} d */ /** @returns {Number} */d: function (d) { return d.getDate(); },
-                /** @param {Date} d */ /** @returns {Number} */D: function (d) { return d.getDay(); },
-                /** @param {Date} d */ /** @returns {Number} */M: function (d) { return d.getMonth(); },
-                /** @param {Date} d */ /** @returns {Number} */y: function (d) { return d.getFullYear(); },
-                /** @param {Date} d */ /** @returns {Number} */H: function (d) { return d.getHours(); },
-                /** @param {Date} d */ /** @returns {Number} */m: function (d) { return d.getMinutes(); },
-                /** @param {Date} d */ /** @returns {Number} */s: function (d) { return d.getSeconds(); },
-                /** @param {Date} d */ /** @returns {Number} */L: function (d) { return d.getMilliseconds(); },
-                /** @param {Date} d */ /** @returns {Number} */o: function (d) { return 0; },
-                /** @param {Date} d */ /** @returns {String} */utcd: function (d) { return ((d + '').match(timezone) || ['']).pop().replace(timezoneClip, ''); },
-                /** @param {Date} d */ /** @returns {String} */utc: function (d) { var z = d.getTimezoneOffset(), s = (z > 0 ? '-' : '+'); z = z < 0 ? -z : z; var zm = z % 60; return s + padLeft((z - zm) / 60, 2, '0') + (zm ? padLeft(zm, 2, '0') : ''); }
+                /** @param {Date} d */ /** @returns {Number} */ 'd': function (d) { return d.getDate(); },
+                /** @param {Date} d */ /** @returns {Number} */ 'D': function (d) { return d.getDay(); },
+                /** @param {Date} d */ /** @returns {Number} */ 'M': function (d) { return d.getMonth(); },
+                /** @param {Date} d */ /** @returns {Number} */ 'y': function (d) { return d.getFullYear(); },
+                /** @param {Date} d */ /** @returns {Number} */ 'H': function (d) { return d.getHours(); },
+                /** @param {Date} d */ /** @returns {Number} */ 'm': function (d) { return d.getMinutes(); },
+                /** @param {Date} d */ /** @returns {Number} */ 's': function (d) { return d.getSeconds(); },
+                /** @param {Date} d */ /** @returns {Number} */ 'L': function (d) { return d.getMilliseconds(); },
+                /** @param {Date} d */ /** @returns {Number} */ 'o': function (d) { return 0; },
+                /** @param {Date} d */ /** @returns {String} */ 'utcd': function (d) { return ((d + '').match(timezone) || ['']).pop().replace(timezoneClip, ''); },
+                /** @param {Date} d */ /** @returns {String} */ 'utc': function (d) { var z = d.getTimezoneOffset(), s = (z > 0 ? '-' : '+'); z = z < 0 ? -z : z; var zm = z % 60; return s + padLeft((z - zm) / 60, 2, '0') + (zm ? padLeft(zm, 2, '0') : ''); }
             };
 
             /** @type {FlagMap} */
             var flagSubMapUtc = {
-                /** @param {Date} d */ /** @returns {Number} */d: function (d) { return d.getUTCDate(); },
-                /** @param {Date} d */ /** @returns {Number} */D: function (d) { return d.getUTCDay(); },
-                /** @param {Date} d */ /** @returns {Number} */M: function (d) { return d.getUTCMonth(); },
-                /** @param {Date} d */ /** @returns {Number} */y: function (d) { return d.getUTCFullYear(); },
-                /** @param {Date} d */ /** @returns {Number} */H: function (d) { return d.getUTCHours(); },
-                /** @param {Date} d */ /** @returns {Number} */m: function (d) { return d.getUTCMinutes(); },
-                /** @param {Date} d */ /** @returns {Number} */s: function (d) { return d.getUTCSeconds(); },
-                /** @param {Date} d */ /** @returns {Number} */L: function (d) { return d.getUTCMilliseconds(); },
-                /** @param {Date} d */ /** @returns {Number} */o: function (d) { return d.getTimezoneOffset(); },
-                /** @param {Date} d */ /** @returns {String} */utcd: function (d) { return "UTC" },
-                /** @param {Date} d */ /** @returns {String} */utc: function (d) { return "Z" }
+                /** @param {Date} d */ /** @returns {Number} */ 'd': function (d) { return d.getUTCDate(); },
+                /** @param {Date} d */ /** @returns {Number} */ 'D': function (d) { return d.getUTCDay(); },
+                /** @param {Date} d */ /** @returns {Number} */ 'M': function (d) { return d.getUTCMonth(); },
+                /** @param {Date} d */ /** @returns {Number} */ 'y': function (d) { return d.getUTCFullYear(); },
+                /** @param {Date} d */ /** @returns {Number} */ 'H': function (d) { return d.getUTCHours(); },
+                /** @param {Date} d */ /** @returns {Number} */ 'm': function (d) { return d.getUTCMinutes(); },
+                /** @param {Date} d */ /** @returns {Number} */ 's': function (d) { return d.getUTCSeconds(); },
+                /** @param {Date} d */ /** @returns {Number} */ 'L': function (d) { return d.getUTCMilliseconds(); },
+                /** @param {Date} d */ /** @returns {Number} */ 'o': function (d) { return d.getTimezoneOffset(); },
+                /** @param {Date} d */ /** @returns {String} */ 'utcd': function (d) { return "UTC" },
+                /** @param {Date} d */ /** @returns {String} */ 'utc': function (d) { return "Z" }
             };
 
-            /** @expose */
             var flagMap = {
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */d: function (o, fmap) { return fmap.d(o); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */dd: function (o, fmap) { return padLeft(fmap.d(o), 2, '0'); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ddd: function (o, fmap, culture) { return culture['weekdays_short'][fmap.D(o)]; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */dddd: function (o, fmap, culture) { return culture['weekdays'][fmap.D(o)]; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */M: function (o, fmap) { return fmap.M(o) + 1; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */MM: function (o, fmap) { return padLeft(fmap.M(o) + 1, 2, '0'); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */MMM: function (o, fmap, culture) { return culture['months_short'][fmap.M(o)]; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */MMMM: function (o, fmap, culture) { return culture['months'][fmap.M(o)]; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */yy: function (o, fmap) { return String(fmap.y(o)).slice(2); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */yyyy: function (o, fmap) { return fmap.y(o); },
-                /** @expose @param {FlagMap} fmap */ /** @return {Number} */h: function (o, fmap) { return fmap.H(o) % 12 || 12; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */hh: function (o, fmap) { return padLeft(fmap.H(o) % 12 || 12, 2, '0'); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */H: function (o, fmap) { return fmap.H(o); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */HH: function (o, fmap) { return padLeft(fmap.H(o), 2, '0'); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */m: function (o, fmap) { return fmap.m(o); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */mm: function (o, fmap) { return padLeft(fmap.m(o), 2, '0'); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */s: function (o, fmap) { return fmap.s(o); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ss: function (o, fmap) { return padLeft(fmap.s(o), 2, '0'); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */l: function (o, fmap) { return padLeft(fmap.L(o), 3, '0'); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */L: function (o, fmap) { var L = fmap.L(o); return padLeft(L > 99 ? Math.round(L / 10) : L, 2, '0'); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */f: function (o, fmap) { return Math.floor(fmap.L(o) / 100).toString(); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ff: function (o, fmap) { return padLeft(Math.floor(fmap.L(o) / 10), 2, '0'); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */fff: function (o, fmap) { return padLeft(fmap.L(o), 3, '0'); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ffff: function (o, fmap) { return padLeft(fmap.L(o), 3, '0') + '0'; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */fffff: function (o, fmap) { return padLeft(fmap.L(o), 3, '0') + '00'; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */ffffff: function (o, fmap) { return padLeft(fmap.L(o), 3, '0') + '000'; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */fffffff: function (o, fmap) { return padLeft(fmap.L(o), 3, '0') + '0000'; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */F: function (o, fmap) { var v = Math.floor(fmap.L(o) / 100); if (v === 0) return ''; return v.toString(); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */FF: function (o, fmap) { var v = Math.floor(fmap.L(o) / 10); if (v === 0) return ''; return padLeft(v, 2, '0'); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */FFF: function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0'); },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */FFFF: function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '0'; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */FFFFF: function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '00'; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */FFFFFF: function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '000'; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */FFFFFFF: function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '0000'; },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */t: function (o, fmap, culture) {
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'd': function (o, fmap) { return fmap.d(o); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'dd': function (o, fmap) { return padLeft(fmap.d(o), 2, '0'); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'ddd': function (o, fmap, culture) { return culture['weekdays_short'][fmap.D(o)]; },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'dddd': function (o, fmap, culture) { return culture['weekdays'][fmap.D(o)]; },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'M': function (o, fmap) { return fmap.M(o) + 1; },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'MM': function (o, fmap) { return padLeft(fmap.M(o) + 1, 2, '0'); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'MMM': function (o, fmap, culture) { return culture['months_short'][fmap.M(o)]; },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'MMMM': function (o, fmap, culture) { return culture['months'][fmap.M(o)]; },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'yy': function (o, fmap) { return String(fmap.y(o)).slice(2); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'yyyy': function (o, fmap) { return fmap.y(o); },
+
+                /** @param {FlagMap} fmap */ /** @return {Number} */
+                'h': function (o, fmap) { return fmap.H(o) % 12 || 12; },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'hh': function (o, fmap) { return padLeft(fmap.H(o) % 12 || 12, 2, '0'); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'H': function (o, fmap) { return fmap.H(o); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'HH': function (o, fmap) { return padLeft(fmap.H(o), 2, '0'); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'm': function (o, fmap) { return fmap.m(o); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'mm': function (o, fmap) { return padLeft(fmap.m(o), 2, '0'); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                's': function (o, fmap) { return fmap.s(o); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'ss': function (o, fmap) { return padLeft(fmap.s(o), 2, '0'); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'l': function (o, fmap) { return padLeft(fmap.L(o), 3, '0'); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'L': function (o, fmap) { var L = fmap.L(o); return padLeft(L > 99 ? Math.round(L / 10) : L, 2, '0'); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'f': function (o, fmap) { return Math.floor(fmap.L(o) / 100).toString(); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'ff': function (o, fmap) { return padLeft(Math.floor(fmap.L(o) / 10), 2, '0'); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'fff': function (o, fmap) { return padLeft(fmap.L(o), 3, '0'); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'ffff': function (o, fmap) { return padLeft(fmap.L(o), 3, '0') + '0'; },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'fffff': function (o, fmap) { return padLeft(fmap.L(o), 3, '0') + '00'; },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'ffffff': function (o, fmap) { return padLeft(fmap.L(o), 3, '0') + '000'; },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'fffffff': function (o, fmap) { return padLeft(fmap.L(o), 3, '0') + '0000'; },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'F': function (o, fmap) { var v = Math.floor(fmap.L(o) / 100); if (v === 0) return ''; return v.toString(); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'FF': function (o, fmap) { var v = Math.floor(fmap.L(o) / 10); if (v === 0) return ''; return padLeft(v, 2, '0'); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'FFF': function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0'); },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'FFFF': function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '0'; },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'FFFFF': function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '00'; },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'FFFFFF': function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '000'; },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'FFFFFFF': function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '0000'; },
+
+                't': function (o, fmap, culture) {
                     return fmap.H(o) < 12 ?
                         culture['am_short_lower'] || 'a' :
                         culture['pm_short_lower'] || 'p'
                 },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */tt: function (o, fmap, culture) {
+
+                'tt': function (o, fmap, culture) {
                     return fmap.H(o) < 12 ?
                         culture['am_lower'] || 'am' :
                         culture['am_lower'] || 'pm'
                 },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */T: function (o, fmap, culture) {
+
+                'T': function (o, fmap, culture) {
                     return fmap.H(o) < 12 ?
                         culture['am_short_upper'] || 'A' :
                         culture['pm_short_upper'] || 'P'
                 },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */TT: function (o, fmap, culture) {
+
+                'TT': function (o, fmap, culture) {
                     return fmap.H(o) < 12 ?
                         culture['am_upper'] || 'AM' :
                         culture['pm_upper'] || 'PM'
                 },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */Z: function (o, fmap) { return fmap.utc(o) },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */UTC: function (o, fmap) { return fmap.utcd(o) },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */o: function (o, fmap) { o = fmap.o(o); return (o > 0 ? "-" : "+") + padLeft(Math.floor(Math.abs(o) / 60) * 100 + Math.abs(o) % 60, 4, '0') },
-                /** @expose @param {FlagMap} fmap */ /** @return {string} */S: function (o, fmap) { var d = fmap.d(o); return ["th", "st", "nd", "rd"][d % 10 > 3 ? 0 : (d % 100 - d % 10 != 10) * d % 10] }
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'Z': function (o, fmap) { return fmap.utc(o) },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'UTC': function (o, fmap) { return fmap.utcd(o) },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'o': function (o, fmap) { o = fmap.o(o); return (o > 0 ? "-" : "+") + padLeft(Math.floor(Math.abs(o) / 60) * 100 + Math.abs(o) % 60, 4, '0') },
+
+                /** @param {FlagMap} fmap */ /** @return {string} */
+                'S': function (o, fmap) { var d = fmap.d(o); return ["th", "st", "nd", "rd"][d % 10 > 3 ? 0 : (d % 100 - d % 10 != 10) * d % 10] }
             };
 
             return function (date, format, culture) {
