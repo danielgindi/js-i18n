@@ -1281,7 +1281,6 @@
                             case 'T':
                                 if (hours12) {
                                     hoursTT = part.toLowerCase();
-                                    hours12 = false;
                                 }
                                 break;
 
