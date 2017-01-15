@@ -711,7 +711,7 @@
          */
         formatDate: (function () {
 
-            var formatMatcher = /d{1,4}|M{1,4}|yy(?:yy)?|([HhmsTt])\1?|[LloSZ]|UTC|"[^"]*"|'[^']*'/g,
+            var formatMatcher = /d{1,4}|M{1,4}|yy(?:yy)?|([HhmsTt])\1?|[LloSZ]|UTC|('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])/g,
                 timezone = /\b(?:[PMCEA][SDP]T|[a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)?(?:[-+]\d{4})?)\b/g,
                 timezoneClip = /[^-+\dA-Z]/g;
 
@@ -1011,7 +1011,7 @@
          * @returns {function(String):Date} The parser function
          */
         createDateParser: (function () {
-            var partsRgx = /('[^'\\]*(?:\\.[^'\\]*)*')|(\[[^\]\\]*(?:\\.[^\]\\]*)*])|yyyy|yy|MMMM|MMM|MM|M|dddd|ddd|dd|d|HH|H|hh|h|mm|m|ss|s|l|L|f|ff|fff|ffff|fffff|ffffff|fffffff|F|FF|FFF|FFFF|FFFFF|FFFFFF|FFFFFFF|tt|t|TT|T|Z|UTC|o|S|.+?/g;
+            var partsRgx = /('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])|yyyy|yy|MMMM|MMM|MM|M|dddd|ddd|dd|d|HH|H|hh|h|mm|m|ss|s|l|L|f|ff|fff|ffff|fffff|ffffff|fffffff|F|FF|FFF|FFFF|FFFFF|FFFFFF|FFFFFFF|tt|t|TT|T|Z|UTC|o|S|.+?/g;
 
             var arrayToRegex = function (array) {
                 var regex = '';
@@ -1139,7 +1139,14 @@
                             regexParts.push(part);
                         } else {
                             // A free text node
-                            part = part.replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/, '$1'); // Remove enclosing quotes if there are...
+                            
+                            // Remove enclosing quotes if there are...
+                            if (part[0] === "'") {
+                                part = part.replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/, '$1');
+                            } else if (part[0] === '"') {
+                                part = part.replace(/"([^"\\]*(?:\\.[^"\\]*)*)"/, '$1');
+                            }
+                            
                             part = part.replace(/\\\\/g, '\\'); // Unescape
                             if (!strict && (part === '/' || part === '.' || part === '-')) {
                                 regex += '([/\\.-])';
