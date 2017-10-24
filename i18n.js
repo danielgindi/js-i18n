@@ -367,6 +367,12 @@
             locOptions.thousands = options.thousands || (locOptions.decimal === ',' ? '.' : ',');
             locOptions.decimalRegex = locOptions.decimal === '.' ? DECIMAL_SEPARATOR_REGEX_PERIOD :
                 (locOptions.decimal === ',' ? DECIMAL_SEPARATOR_REGEX_COMMA : new RegExp('\\' + locOptions.decimal + 'g'));
+
+            if (!activeLanguage) {
+                activeLanguage = lang;
+                active = loc;
+            }
+            
             return this;
         },
 
