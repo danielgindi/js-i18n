@@ -40,6 +40,7 @@
     var DECIMAL_SEPARATOR_REGEX_COMMA = new RegExp('\\,g');
 
     var activeLanguage = '';
+    var fallbackLanguage = '';
     var active = null;
     var locs = {}; // Here we will keep i18n objects, each key is a language code
     var originalLocs = {}; // Here we will keep original localizations before using extendLanguage
@@ -106,7 +107,7 @@
             value = value + '';
             value = value[0].toUpperCase() + value.substr(1).toLowerCase();
         } else if (encoding.substr(0, 7) === 'printf ') {
-            var localeOptions = active['__options__'];
+            var localeOptions = active.options;
             value = applySpecifiers(value, encoding.substr(7), localeOptions.decimal, localeOptions.thousands);
         }
 
@@ -172,7 +173,7 @@
         };
 
     })();
-    
+
     /**
      * This will process value with printf specifier format
      * @param {*} value the value to process
@@ -353,26 +354,32 @@
         /**
          * Add a language to the localization object
          * @public
-         * @param {String} lang language code
-         * @param {Object} loc localization object
+         * @param {String} langCode language code
+         * @param {Object} data localization object
          * @param {ADD_LANGUAGE_OPTIONS?} options options for this language
          * @returns {i18n} self
          */
-        add: function (lang, loc, options) {
-            locs[lang] = loc;
+        add: function (langCode, data, options) {
             options = options || {};
-            var locOptions = loc['__options__'] = {};
+
+            var locOptions = {};
             locOptions.plural = options.plural || defaultPlural;
             locOptions.decimal = options.decimal || DEFAULT_DECIMAL_SEPARATOR;
             locOptions.thousands = options.thousands || (locOptions.decimal === ',' ? '.' : ',');
             locOptions.decimalRegex = locOptions.decimal === '.' ? DECIMAL_SEPARATOR_REGEX_PERIOD :
                 (locOptions.decimal === ',' ? DECIMAL_SEPARATOR_REGEX_COMMA : new RegExp('\\' + locOptions.decimal + 'g'));
 
+            locs[langCode] = {
+                code: langCode,
+                data: data,
+                options: locOptions
+            };
+
             if (!activeLanguage) {
-                activeLanguage = lang;
-                active = loc;
+                activeLanguage = langCode;
+                active = locs[langCode];
             }
-            
+
             return this;
         },
 
@@ -381,10 +388,9 @@
          * @public
          * @param {String} lang language code
          * @param {Boolean?} tryFallbacks should we try to search in fallback scenarios i.e. 'en' for 'en-US'
-         * @param {Boolean?} returnCode should we return the language code as well
-         * @returns {Object} language object
+         * @returns {{ code: String, data: Object, options: Object }} language object
          */
-        getLanguage: function (lang, tryFallbacks, returnCode) {
+        getLanguage: function (lang, tryFallbacks) {
             if (tryFallbacks) {
                 if (lang === 'iw') lang = 'he'; // Fallback from Google's old spec, if the setting came from an old Android device
                 if (!lang) {
@@ -405,9 +411,6 @@
                 if (!found) {
                     lang = this.getAvailableLanguages()[0];
                     found = locs[lang];
-                }
-                if (returnCode) {
-                    return { 'code': lang, 'lang': found };
                 }
                 return found;
             } else {
@@ -440,11 +443,13 @@
                 argIndex = 0,
                 keys,
                 useOriginal = false,
-                loc,
+                locale,
+                tryFallback = true,
                 options,
                 i,
                 len;
 
+            // Normalize key(s)
             if (typeof args[0] === 'string' && typeof args[1] !== 'string') {
                 keys = args[argIndex++];
                 if (keys.length === 0) {
@@ -467,54 +472,91 @@
                 }
             }
 
+            // `useOriginal` argument
             options = args[argIndex++];
             if (typeof options === 'boolean') {
                 useOriginal = options;
                 options = args[argIndex];
             }
 
+            // Choose locale
             if (useOriginal) {
-                loc = originalLocs[activeLanguage] || active;
+                locale = originalLocs[activeLanguage] || active;
             } else {
-                loc = active;
+                locale = active;
             }
 
-            // If not key is specified, return the root namespace
+            var loc = locale.data;
+
+            // If no key is specified, return the root namespace
             if (!keys.length) {
                 return loc;
             }
 
-            if (options && typeof options['count'] === 'number') { // Try for plural form
+            // `while` because we might try multiple times,
+            // like first try with active locale, second time with fallback locale.
+            while (true) {
 
-                // Loop on all of them except the last. We are going to test the last key combined with plural specifiers
-                for (i = 0, len = keys.length - 1; i < len; i++) {
-                    loc = loc[keys[i]];
-                }
+                if (options && typeof options['count'] === 'number') { // Try for plural form
 
-                var pluralSpec = active['__options__'].plural;
-                pluralSpec = pluralSpec(options['count']);
+                    // Loop on all of them except the last. We are going to test the last key combined with plural specifiers
+                    for (i = 0, len = keys.length - 1; i < len; i++) {
+                        loc = loc[keys[i]];
 
-                var key = keys[keys.length - 1]; // This is the last key in the keys array
+                        // Avoid stepping into an undefined. Make systems more stable.
+                        // Anyone who queries for an invalid `t(...)` should handle the `undefined` himself.
+                        if (loc === undefined) {
+                            break;
+                        }
+                    }
 
-                if (pluralSpec && loc[key + '_' + pluralSpec]) {
-                    // We have a match for the plural form
-                    loc = loc[key + '_' + pluralSpec];
+                    var pluralSpec = locale.options.plural;
+                    pluralSpec = pluralSpec(options['count']);
+
+                    var key = keys[keys.length - 1]; // This is the last key in the keys array
+
+                    if (pluralSpec && loc[key + '_' + pluralSpec]) {
+                        // We have a match for the plural form
+                        loc = loc[key + '_' + pluralSpec];
+                    } else {
+                        // Take the bare one
+                        loc = loc[key];
+                    }
+
                 } else {
-                    // Take the bare one
-                    loc = loc[key];
+                    // No need for the plural form, as no 'count' was specified
+
+                    for (i = 0, len = keys.length; i < len; i++) {
+                        loc = loc[keys[i]];
+
+                        // Avoid stepping into an undefined. Make systems more stable.
+                        // Anyone who queries for an invalid `t(...)` should handle the `undefined` himself.
+                        if (loc === undefined) {
+                            break;
+                        }
+                    }
                 }
 
-            } else {
-                // No need for the plural form, as no 'count' was specified
+                if (loc === undefined &&
+                    tryFallback &&
+                    fallbackLanguage &&
+                    fallbackLanguage !== activeLanguage) {
 
-                for (i = 0, len = keys.length; i < len; i++) {
-                    loc = loc[keys[i]];
+                    tryFallback = false;
+
+                    if (locs.hasOwnProperty(fallbackLanguage)) {
+                        locale = locs[fallbackLanguage];
+                        loc = locale.data;
+                        continue;
+                    }
                 }
+
+                break;
             }
 
             if (options) {
 
-                if (typeof options['gender'] === 'string') { // Try for plural form
+                if (typeof options['gender'] === 'string') { // Try for gender form
 
                     if (typeof loc === 'object' &&
                         !(loc instanceof Array)) {
@@ -575,7 +617,7 @@
          * @returns {String} decimal separator
          */
         getDecimalSeparator: function () {
-            return active['__options__'].decimal;
+            return active.options.decimal;
         },
 
         /**
@@ -584,7 +626,7 @@
          * @returns {String} thousands separator
          */
         getThousandsSeparator: function () {
-            return active['__options__'].thousands;
+            return active.options.thousands;
         },
 
         /**
@@ -595,9 +637,24 @@
          * @returns {i18n} self
          */
         setActiveLanguage: function (lang) {
-            var found = this.getLanguage(lang, true, true);
-            active = found.lang;
+            var found = this.getLanguage(lang, true);
+            active = found;
             activeLanguage = found.code;
+            return this;
+        },
+
+        /**
+         * Set the language code of the fallback language.
+         * By default there's no fallback language, so <code>undefined</code> could be returned when a key is not localized.
+         * The function will fall back from full to two-letter ISO codes (en-US to en) and from bad Android like codes (en_US to en).
+         * Note: For performance reasons, the fallback happens only if <code>setFallbackLanguage(...)</code> is called when all languages are already added. Otherwise, the specified language code is used as it is. 
+         * @public
+         * @param {String} lang the language code to use
+         * @returns {i18n} self
+         */
+        setFallbackLanguage: function (lang) {
+            var found = this.getLanguage(lang, true);
+            fallbackLanguage = found ? found.code : lang;
             return this;
         },
 
@@ -660,7 +717,7 @@
                     if (!originalLocs[lang]) { // Back it up first
                         originalLocs[lang] = JSON.parse(JSON.stringify(locs[lang]));
                     }
-                    extendDotted(locs[lang], data);
+                    extendDotted(locs[lang].data, data);
                 }
             } catch (e) { }
             return this;
@@ -680,7 +737,7 @@
                         if (!originalLocs[lang]) { // Back it up first
                             originalLocs[lang] = JSON.parse(JSON.stringify(locs[lang]));
                         }
-                        extendDotted(locs[lang], data[lang]);
+                        extendDotted(locs[lang].data, data[lang]);
                     }
                 }
             } catch (e) { }
@@ -695,7 +752,7 @@
          */
         physicalSize: function (bytes) {
             var ret,
-                loc = active['size_abbrs'];
+                loc = i18n.t('size_abbrs');
             if (bytes < 100) ret = { size: bytes, name: loc['b'] };
             else if (bytes < 101376) ret = { size: bytes / 1024.0, name: loc['kb'] };
             else if (bytes < 103809024) ret = { size: bytes / 1024.0 / 1024.0, name: loc['mb'] };
@@ -894,18 +951,16 @@
             };
 
             return function (date, format, culture) {
+
                 if (culture && typeof culture === 'string') {
                     culture = i18n.getLanguage(culture, true);
+
+                    if (culture) {
+                        culture = culture['calendar'];
+                    }
                 }
-                if (!culture) {
-                    culture = active;
-                }
-                if (culture && culture['calendar']) {
-                    culture = culture['calendar'];
-                }
-                if (!culture) {
-                    culture = {};
-                }
+
+                culture = culture || i18n.t('calendar') || {};
 
                 // Passing date through Date applies Date.parse, if necessary
                 if (date == null) {
@@ -965,18 +1020,16 @@
          * @returns {Date} The parsed date
          */
         parseDate: function (date, format, culture, strict) {
+
             if (culture && typeof culture === 'string') {
                 culture = i18n.getLanguage(culture, true);
+
+                if (culture) {
+                    culture = culture['calendar'];
+                }
             }
-            if (!culture) {
-                culture = active;
-            }
-            if (culture && culture['calendar']) {
-                culture = culture['calendar'];
-            }
-            if (!culture) {
-                culture = {};
-            }
+
+            culture = culture || i18n.t('calendar') || {};
 
             if (!format) {
                 if ('parse' in Date) {
@@ -1145,14 +1198,14 @@
                             regexParts.push(part);
                         } else {
                             // A free text node
-                            
+
                             // Remove enclosing quotes if there are...
                             if (part[0] === "'") {
                                 part = part.replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/, '$1');
                             } else if (part[0] === '"') {
                                 part = part.replace(/"([^"\\]*(?:\\.[^"\\]*)*)"/, '$1');
                             }
-                            
+
                             part = part.replace(/\\\\/g, '\\'); // Unescape
                             if (!strict && (part === '/' || part === '.' || part === '-')) {
                                 regex += '([/\\.-])';
@@ -1363,8 +1416,8 @@
             if (typeof value === 'number') {
                 value = value.toString();
 
-                var decimalSep = active['__options__'].decimal,
-                    thousandsSep = active['__options__'].thousands;
+                var decimalSep = active.options.decimal,
+                    thousandsSep = active.options.thousands;
 
                 if (decimalSep !== '.') {
                     value = value.replace(/\./g, decimalSep);
@@ -1407,7 +1460,7 @@
         parseNumber: function (value) {
             if (value === '' || value == null) return null;
 
-            var decimalRegex = active['__options__'].decimalRegex;
+            var decimalRegex = active.options.decimalRegex;
 
             if (typeof value !== 'number') {
                 return parseFloat(value.replace(decimalRegex, '.'));
