@@ -7,12 +7,6 @@ An i18n library.
 
 I don't have time yet for documentation, but figuring it out from the JSDocs in the code is pretty easy...
 
-## Breaking changes in 1.1.0
-
-* Filters are now not specified with `:`, but with a `|`. So you should replace all your `:html}` with `|html}`, `:htmll}` with `|htmll}`, `:json}` with `|json}`, `:url}` with `|url}`.
-* Printf specifiers are now specified with `|printf SPECIFIER`, i.e `|printf 2.5f`.
-* This was done to allow easily adding more filters.
-
 ## Features
 
 * Supports both browser mode (global i18n) an node.js mode (module.exports)

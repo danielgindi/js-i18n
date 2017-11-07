@@ -1,5 +1,5 @@
 /*!
- * js-i18n 1.1.4
+ * js-i18n 1.1.5
  * https://github.com/danielgindi/js-i18n
  */
 
