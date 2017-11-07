@@ -28,16 +28,12 @@
     var DEFAULT_DECIMAL_SEPARATOR = (1.1).toLocaleString().substr(1, 1);
 
     /** @const */
-    var DEFAULT_THOUSANDS_SEPARATOR = DEFAULT_DECIMAL_SEPARATOR === ',' ? '.' : ',';
+    var DEFAULT_THOUSANDS_SEPARATOR = (1000).toLocaleString().length === 5
+        ? (1000).toLocaleString().substr(1, 1)
+        : (DEFAULT_DECIMAL_SEPARATOR === ',' ? '.' : ',');
 
     /** @const */
     var DEFAULT_DECIMAL_SEPARATOR_REGEX = new RegExp('\\' + DEFAULT_DECIMAL_SEPARATOR, 'g');
-
-    /** @const */
-    var DECIMAL_SEPARATOR_REGEX_PERIOD = new RegExp('\\.g');
-
-    /** @const */
-    var DECIMAL_SEPARATOR_REGEX_COMMA = new RegExp('\\,g');
 
     var activeLanguage = '';
     var fallbackLanguage = '';
@@ -366,8 +362,9 @@
             locOptions.plural = options.plural || defaultPlural;
             locOptions.decimal = options.decimal || DEFAULT_DECIMAL_SEPARATOR;
             locOptions.thousands = options.thousands || (locOptions.decimal === ',' ? '.' : ',');
-            locOptions.decimalRegex = locOptions.decimal === '.' ? DECIMAL_SEPARATOR_REGEX_PERIOD :
-                (locOptions.decimal === ',' ? DECIMAL_SEPARATOR_REGEX_COMMA : new RegExp('\\' + locOptions.decimal + 'g'));
+            locOptions.decimalOrThousandsRegex = new RegExp(
+                '(' + regexEscape(locOptions.decimal) +
+                ')|(' + regexEscape(locOptions.thousands) + ')', 'g');
 
             locs[langCode] = {
                 code: langCode,
@@ -1450,20 +1447,28 @@
 
         /**
          * Parses a number from user input using the correct decimal separator detected from the browser.
+         *
+         * By default it will behave like `parseFloat`, where thousands separators are not supported.
+         * If `thousands` is `true`, then it will allow parsing with the separator.
          * @public
          * @expose
          * @param {Number|String|null} value the value to parse.
+         * @param {Boolean?} [thousands=false] - Don't break when there are thousands separators in the value
          * @returns {Number|null} The parsed number.
          *                   If null or empty string is supplied, then null is returned.
          *                   If a number was supplied, it is returned as-is.
          */
-        parseNumber: function (value) {
+        parseNumber: function (value, thousands) {
             if (value === '' || value == null) return null;
 
-            var decimalRegex = active.options.decimalRegex;
-
             if (typeof value !== 'number') {
-                return parseFloat(value.replace(decimalRegex, '.'));
+                return parseFloat(
+                    value.replace(active.options.decimalOrThousandsRegex, function (g0, dec, tho) {
+                        if (dec) return '.';
+                        if (tho) return thousands ? '' : ',';
+                        return g0;
+                    })
+                );
             }
 
             return value;
