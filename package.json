@@ -2,20 +2,43 @@
   "name": "js-i18n",
   "version": "1.1.5",
   "description": "An i18n library, with support for plurals, dates, C style format specifiers and more.",
-  "main": "i18n.js",
+  "main": "dist/i18n.cjs.min.js",
+  "module": "dist/i18n.min.mjs",
+  "broswer": "dist/i18n.umd.min.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/danielgindi/js-i18n"
+  },
+  "engines": {
+    "node": ">=8"
   },
   "keywords": [
     "i18n",
     "internationalization",
     "localization"
   ],
+  "scripts": {
+    "build": "node ./scripts/build.js"
+  },
   "author": "Daniel Cohen Gindi <danielgindi@gmail.com> (https://github.com/danielgindi)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/danielgindi/js-i18n/issues"
   },
-  "homepage": "https://github.com/danielgindi/js-i18n"
+  "homepage": "https://github.com/danielgindi/js-i18n",
+  "devDependencies": {
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-transform-runtime": "^7.4.4",
+    "@babel/polyfill": "^7.4.4",
+    "@babel/preset-env": "^7.4.5",
+    "@babel/runtime": "^7.4.4",
+    "babelify": "^10.0.0",
+    "core-js": "^3.0.1",
+    "fs-extra": "^8.0.1",
+    "rollup": "^1.11.3",
+    "rollup-plugin-babel": "^4.3.2",
+    "rollup-plugin-commonjs": "^10.0.0",
+    "rollup-plugin-node-resolve": "^5.0.0",
+    "rollup-plugin-terser": "^5.0.0"
+  }
 }
