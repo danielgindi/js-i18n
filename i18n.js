@@ -1552,9 +1552,33 @@
                 var value, key = arguments[3];
                 var i, len;
 
+                var filters = arguments[4];
+                    
                 if (openingBrackets.length === 1) {
 
-                    value = i18n.t(key, data);
+                    /** @type string|null */
+                    var gender = null;
+                    if (filters && filters[0] === 'g' && filters[1] === ':') {
+                        gender = i18n.t(modifiers[0].substr(2));
+
+                        if (gender === 'male') {
+                            gender = 'm';
+                        }
+                        else if (gender == 'female') {
+                            gender = 'f';
+                        }
+                    }
+                        
+                    if (gender !== null) {
+                        value = i18n.t(key + '.' + gender);
+                        if (value === undefined) value = i18n.t(key + '.neutral');
+                        if (value === undefined) value = i18n.t(key + '.');
+                        if (value === undefined) value = i18n.t(key + '.m');
+                        if (value === undefined) value = i18n.t(key + '.f');
+                    }
+                    else {
+                        value = i18n.t(key, data);
+                    }
 
                 } else {
 
