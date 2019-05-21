@@ -25,33 +25,36 @@
      */
 
     /** @const */
-    var DEFAULT_DECIMAL_SEPARATOR = (1.1).toLocaleString().substr(1, 1);
+    const DEFAULT_DECIMAL_SEPARATOR = (1.1).toLocaleString().substr(1, 1);
 
     /** @const */
-    var DEFAULT_THOUSANDS_SEPARATOR = (1000).toLocaleString().length === 5
+    const DEFAULT_THOUSANDS_SEPARATOR = (1000).toLocaleString().length === 5
         ? (1000).toLocaleString().substr(1, 1)
         : (DEFAULT_DECIMAL_SEPARATOR === ',' ? '.' : ',');
 
     /** @const */
-    var DEFAULT_DECIMAL_SEPARATOR_REGEX = new RegExp('\\' + DEFAULT_DECIMAL_SEPARATOR, 'g');
+    const DEFAULT_DECIMAL_SEPARATOR_REGEX = new RegExp('\\' + DEFAULT_DECIMAL_SEPARATOR, 'g');
 
-    var activeLanguage = '';
-    var fallbackLanguage = '';
-    var active = null;
-    var locs = {}; // Here we will keep i18n objects, each key is a language code
-    var originalLocs = {}; // Here we will keep original localizations before using extendLanguage
+    let activeLanguage = '';
+    let fallbackLanguage = '';
+    let active = null;
 
-    var _escapeRgx = /([\/()[\]?{}|*+-\\:])/g;
-    var regexEscape = function (string) {
+    const locs = {}; // Here we will keep i18n objects, each key is a language code
+    const originalLocs = {}; // Here we will keep original localizations before using extendLanguage
+
+    const _escapeRgx = /([\/()[\]?{}|*+-\\:])/g;
+    const regexEscape = function (string) {
         return string.replace(_escapeRgx, '\\$1');
     };
-    var arrayIndexOf = function (array, searchElement, fromIndex) {
-        var k, o = array;
-        var len = o.length >>> 0;
+
+    const arrayIndexOf = function (array, searchElement, fromIndex) {
+        let k;
+        const o = array;
+        const len = o.length >>> 0;
         if (len === 0) {
             return -1;
         }
-        var n = +fromIndex || 0;
+        let n = +fromIndex || 0;
         if (Math.abs(n) === Infinity) {
             n = 0;
         }
@@ -74,50 +77,20 @@
      * @param {Number} count the number that we need to inspect
      * @returns {string}
      */
-    var defaultPlural = function (count) {
-        if (count == 0) return 'zero';
-        if (count == 1) return 'one';
+    const defaultPlural = function (count) {
+        if (count === 0) return 'zero';
+        if (count === 1) return 'one';
         return 'plural';
     };
 
     /**
-     * Encodes the value {value} using the specified {encoding}
-     * @param {String} value the value to encode
-     * @param {String} encoding for filters
-     * @returns {*}
-     */
-    var encodeValue = function (value, encoding) {
-        if (encoding === 'html') {
-            value = (value == null ? '' : (value + '')).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#39;").replace(/"/g, "&quot;");
-        } else if (encoding === 'htmll') {
-            value = (value == null ? '' : (value + '')).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "<br />");
-        } else if (encoding === 'json') {
-            value = JSON.stringify(value);
-        } else if (encoding === 'url') {
-            value = encodeURIComponent(value);
-        } else if (encoding === 'lower') {
-            value = (value + '').toLowerCase();
-        } else if (encoding === 'upper') {
-            value = (value + '').toUpperCase();
-        } else if (encoding === 'upperfirst') {
-            value = value + '';
-            value = value[0].toUpperCase() + value.substr(1).toLowerCase();
-        } else if (encoding.substr(0, 7) === 'printf ') {
-            var localeOptions = active.options;
-            value = applySpecifiers(value, encoding.substr(7), localeOptions.decimal, localeOptions.thousands);
-        }
-
-        return value;
-    };
-
-    /**
      * Pad a value with characters on the left
-     * @param {String|Number} value the value to pad
+     * @param {string|Number} value the value to pad
      * @param {Number} length minimum length for the output
-     * @param {String} ch the character to use for the padding
+     * @param {string} ch the character to use for the padding
      * @returns {*}
      */
-    var padLeft = function (value, length, ch) {
+    const padLeft = function (value, length, ch) {
         value = value.toString();
         while (value.length < length) {
             value = ch + value;
@@ -127,14 +100,13 @@
 
     /**
      * Generate an array of all lowercase-uppercase combinations of a given string
-     * @param {String} text
-     * @returns {String[]}
+     * @type {function(text: string):string[]}
      */
-    var generateAllCasePermutations = (function () {
+    const generateAllCasePermutations = (() => {
+        const recurse = function (results, lower, upper, hasCase, pre) {
 
-        var recurse = function (results, lower, upper, hasCase, pre) {
-
-            var len = lower.length, currenLen = pre.length;
+            const len = lower.length;
+            let currenLen = pre.length;
 
             while (currenLen < len && !hasCase[currenLen]) {
                 pre += lower[currenLen++];
@@ -148,16 +120,18 @@
             recurse(results, lower, upper, hasCase, pre + upper[currenLen]);
         };
 
-        return function (text) {
+        return text => {
             text = text + '';
             if (!text) return text;
 
-            var results = [];
-            var lower = text.split('');
-            var upper = [];
-            var hasCase = [];
+            const results = [];
+            const lower = text.split('');
+            const upper = [];
+            const hasCase = [];
 
-            for (var i = 0, len = text.length; i < len; i++) {
+            let i = 0;
+            const len = text.length;
+            for (; i < len; i++) {
                 lower[i] = lower[i].toLowerCase();
                 upper[i] = lower[i].toUpperCase();
                 hasCase[i] = upper[i] !== lower[i];
@@ -167,24 +141,23 @@
 
             return results;
         };
-
     })();
 
     /**
      * This will process value with printf specifier format
      * @param {*} value the value to process
-     * @param {String?} specifiers the printf style specifiers. i.e. '2.5f', 'E', '#x'
-     * @param {String?} decimalSign the decimal separator character to use
-     * @param {String?} thousandsSign the thousands separator character to use
-     * @returns {String}
+     * @param {string?} specifiers the printf style specifiers. i.e. '2.5f', 'E', '#x'
+     * @param {string?} decimalSign the decimal separator character to use
+     * @param {string?} thousandsSign the thousands separator character to use
+     * @returns {string}
      */
-    var applySpecifiers = function (value, specifiers, decimalSign, thousandsSign) {
+    const applySpecifiers = function (value, specifiers, decimalSign, thousandsSign) {
         if (!specifiers) return value;
 
-        var type = specifiers[specifiers.length - 1];
+        const type = specifiers[specifiers.length - 1];
         specifiers = specifiers.substr(0, specifiers.length - 1);
 
-        var isNumeric =
+        const isNumeric =
             type === 'b' ||
             type === 'c' ||
             type === 'd' ||
@@ -197,12 +170,12 @@
             type === 'u' ||
             type === 'x' ||
             type === 'X';
-        var isDecimalNumeric =
+        const isDecimalNumeric =
             type === 'e' ||
             type === 'E' ||
             type === 'f' ||
             type === 'g';
-        var isUpperCase =
+        const isUpperCase =
             type === 'E' ||
             type === 'X';
 
@@ -214,7 +187,7 @@
                 value = value >>> 0;
             }
 
-            var parsedSpecifiers = specifiers.match(/(\+)?( )?(#)?(0)?([0-9]+)?(,)?(.([0-9]+))?/);
+            const parsedSpecifiers = specifiers.match(/(\+)?( )?(#)?(0)?([0-9]+)?(,)?(.([0-9]+))?/);
             var forceSign = parsedSpecifiers[1] === '+',
                 spaceSign = parsedSpecifiers[2] === ' ',
                 radiiOrDecimalSign = parsedSpecifiers[3] === '#',
@@ -244,7 +217,7 @@
         } else if (type === 'g') {
             value = parseFloat(value).toString();
             if (precision !== undefined) {
-                var decimalIdx = value.indexOf('.');
+                const decimalIdx = value.indexOf('.');
                 if (decimalIdx > -1) {
                     value = value.substr(0, decimalIdx + (precision > 0 ? 1 : 0) + precision);
                 }
@@ -288,15 +261,15 @@
         }
 
         if (hasThousands) {
-            var decIndex = value.indexOf(decimalSign);
+            let decIndex = value.indexOf(decimalSign);
             if (decIndex === -1) {
                 decIndex = value.length;
             }
-            var signIndex = value.charAt(0) === '-' ? 1 : 0;
+            const signIndex = value.charAt(0) === '-' ? 1 : 0;
             if (decIndex - signIndex > 3) {
-                var sepValue = '';
-                var major = value.substr(signIndex, decIndex - signIndex);
-                var fromIndex = 0, toIndex = major.length % 3;
+                let sepValue = '';
+                const major = value.substr(signIndex, decIndex - signIndex);
+                let fromIndex = 0, toIndex = major.length % 3;
                 while (fromIndex < major.length) {
                     if (fromIndex > 0) {
                         sepValue += thousandsSign;
@@ -310,14 +283,14 @@
         }
 
         if (isNumeric) {
-            var sign = (value.charAt(0) === '-' ? '-' : (forceSign ? '+' : '')) || (spaceSign ? ' ' : '');
+            const sign = (value.charAt(0) === '-' ? '-' : (forceSign ? '+' : '')) || (spaceSign ? ' ' : '');
 
             // Remove the - sign
             if (sign === '-') {
                 value = value.substr(1);
             }
 
-            var radiiSign = '';
+            let radiiSign = '';
 
             // Prefix with the radii sign
             if (radiiOrDecimalSign) {
@@ -344,13 +317,50 @@
         return value;
     };
 
+    /**
+     * Encodes the value {value} using the specified {encoding}
+     * @param {string} value the value to encode
+     * @param {string} encoding for filters
+     * @returns {*}
+     */
+    const encodeValue = function (value, encoding) {
+        if (encoding === 'html') {
+            value = (value == null ? '' : (value + '')).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+        }
+        else if (encoding === 'htmll') {
+            value = (value == null ? '' : (value + '')).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "<br />");
+        }
+        else if (encoding === 'json') {
+            value = JSON.stringify(value);
+        }
+        else if (encoding === 'url') {
+            value = encodeURIComponent(value);
+        }
+        else if (encoding === 'lower') {
+            value = (value + '').toLowerCase();
+        }
+        else if (encoding === 'upper') {
+            value = (value + '').toUpperCase();
+        }
+        else if (encoding === 'upperfirst') {
+            value = value + '';
+            value = value[0].toUpperCase() + value.substr(1).toLowerCase();
+        }
+        else if (encoding.substr(0, 7) === 'printf ') {
+            const localeOptions = active.options;
+            value = applySpecifiers(value, encoding.substr(7), localeOptions.decimal, localeOptions.thousands);
+        }
+
+        return value;
+    };
+
     /** @typedef i18n */
-    var i18n = {
+    const i18n = {
 
         /**
          * Add a language to the localization object
          * @public
-         * @param {String} langCode language code
+         * @param {string} langCode language code
          * @param {Object} data localization object
          * @param {ADD_LANGUAGE_OPTIONS?} options options for this language
          * @returns {i18n} self
@@ -358,7 +368,7 @@
         add: function (langCode, data, options) {
             options = options || {};
 
-            var locOptions = {};
+            const locOptions = {};
             locOptions.plural = options.plural || defaultPlural;
             locOptions.decimal = options.decimal || DEFAULT_DECIMAL_SEPARATOR;
             locOptions.thousands = options.thousands || (locOptions.decimal === ',' ? '.' : ',');
@@ -383,9 +393,9 @@
         /**
          * Get a language object from the localization
          * @public
-         * @param {String} lang language code
-         * @param {Boolean?} tryFallbacks should we try to search in fallback scenarios i.e. 'en' for 'en-US'
-         * @returns {{ code: String, data: Object, options: Object }} language object
+         * @param {string} lang language code
+         * @param {boolean?} tryFallbacks should we try to search in fallback scenarios i.e. 'en' for 'en-US'
+         * @returns {{ code: string, data: Object, options: Object }} language object
          */
         getLanguage: function (lang, tryFallbacks) {
             if (tryFallbacks) {
@@ -393,22 +403,25 @@
                 if (!lang) {
                     lang = this.getAvailableLanguages()[0];
                 }
-                var found = null;
+                let found = null;
                 while (typeof lang === 'string') {
-                    if (found = locs[lang]) break;
-                    var idx = lang.lastIndexOf('-');
-                    if (idx < 0) {
+                    if ((found = locs[lang])) break;
+
+                    let idx = lang.lastIndexOf('-');
+
+                    if (idx < 0)
                         idx = lang.lastIndexOf('_');
-                    }
-                    if (idx > 0) {
+
+                    if (idx > 0)
                         lang = lang.substr(0, idx);
-                    }
                     else break;
                 }
+
                 if (!found) {
                     lang = this.getAvailableLanguages()[0];
                     found = locs[lang];
                 }
+
                 return found;
             } else {
                 return locs[lang];
@@ -436,8 +449,8 @@
          * @returns {*} localized value or object
          */
         t: function () {
-            var args = arguments,
-                argIndex = 0,
+            const args = arguments;
+            let argIndex = 0,
                 keys,
                 useOriginal = false,
                 locale,
@@ -457,7 +470,7 @@
             } else if (typeof args[0] === 'object' && 'length' in args[0]) {
                 keys = args[argIndex++];
             } else if (typeof args[0] === 'string' && typeof args[1] === 'string') {
-                var arg;
+                let arg;
                 keys = [];
                 for (len = args.length; argIndex < len; argIndex++) {
                     arg = args[argIndex];
@@ -483,7 +496,7 @@
                 locale = active;
             }
 
-            var loc = locale.data;
+            let loc = locale.data;
 
             // If no key is specified, return the root namespace
             if (!keys.length) {
@@ -507,10 +520,10 @@
                         }
                     }
 
-                    var pluralSpec = locale.options.plural;
+                    let pluralSpec = locale.options.plural;
                     pluralSpec = pluralSpec(options['count']);
 
-                    var key = keys[keys.length - 1]; // This is the last key in the keys array
+                    const key = keys[keys.length - 1]; // This is the last key in the keys array
 
                     if (pluralSpec && loc[key + '_' + pluralSpec]) {
                         // We have a match for the plural form
@@ -558,7 +571,8 @@
                     if (typeof loc === 'object' &&
                         !(loc instanceof Array)) {
 
-                        var gender = options['gender'], genderized;
+                        const gender = options['gender'];
+                        let genderized;
 
                         // Allow any gender, you can invent new ones...
                         genderized = loc[gender];
@@ -611,7 +625,7 @@
         /**
          * Get the decimal seperator for the active locale
          * @public
-         * @returns {String} decimal separator
+         * @returns {string} decimal separator
          */
         getDecimalSeparator: function () {
             return active.options.decimal;
@@ -620,7 +634,7 @@
         /**
          * Get the thousands seperator for the active locale
          * @public
-         * @returns {String} thousands separator
+         * @returns {string} thousands separator
          */
         getThousandsSeparator: function () {
             return active.options.thousands;
@@ -630,11 +644,11 @@
          * Set current active language using a language code.
          * The function will fall back from full to two-letter ISO codes (en-US to en) and from bad Android like codes (en_US to en).
          * @public
-         * @param {String} lang the language code to use
+         * @param {string} lang the language code to use
          * @returns {i18n} self
          */
         setActiveLanguage: function (lang) {
-            var found = this.getLanguage(lang, true);
+            const found = this.getLanguage(lang, true);
             active = found;
             activeLanguage = found.code;
             return this;
@@ -644,13 +658,13 @@
          * Set the language code of the fallback language.
          * By default there's no fallback language, so <code>undefined</code> could be returned when a key is not localized.
          * The function will fall back from full to two-letter ISO codes (en-US to en) and from bad Android like codes (en_US to en).
-         * Note: For performance reasons, the fallback happens only if <code>setFallbackLanguage(...)</code> is called when all languages are already added. Otherwise, the specified language code is used as it is. 
+         * Note: For performance reasons, the fallback happens only if <code>setFallbackLanguage(...)</code> is called when all languages are already added. Otherwise, the specified language code is used as it is.
          * @public
-         * @param {String} lang the language code to use
+         * @param {string} lang the language code to use
          * @returns {i18n} self
          */
         setFallbackLanguage: function (lang) {
-            var found = this.getLanguage(lang, true);
+            const found = this.getLanguage(lang, true);
             fallbackLanguage = found ? found.code : lang;
             return this;
         },
@@ -662,12 +676,13 @@
          * @returns {i18n} self
          */
         setActiveLanguageFromMetaTag: function () {
-            var lang = document.documentElement.getAttribute('lang') || document.documentElement.getAttribute('xml:lang');
+            let lang = document.documentElement.getAttribute('lang') || document.documentElement.getAttribute('xml:lang');
             if (!lang) {
-                var metas = document.getElementsByTagName('meta');
-                for (var i = 0, meta; i < metas.length; i++) {
+                const metas = document.getElementsByTagName('meta');
+                let i = 0, meta;
+                for (; i < metas.length; i++) {
                     meta = metas[i];
-                    if ((meta.getAttribute('http-equiv') || '').toLowerCase() == 'content-language') {
+                    if ((meta.getAttribute('http-equiv') || '').toLowerCase() === 'content-language') {
                         lang = meta.getAttribute('content');
                         break;
                     }
@@ -679,7 +694,7 @@
         /**
          * Get the current active language code.
          * @public
-         * @returns {String} current active language code
+         * @returns {string} current active language code
          */
         getActiveLanguage: function () {
             return activeLanguage;
@@ -688,11 +703,11 @@
         /**
          * Get an array of the available language codes
          * @public
-         * @returns {Array<String>} array of the available language codes
+         * @returns {string[]} array of the available language codes
          */
         getAvailableLanguages: function () {
-            var langs = [];
-            for (var key in locs) {
+            const langs = [];
+            for (let key in locs) {
                 if (!locs.hasOwnProperty(key)) continue;
                 langs.push(key);
             }
@@ -704,7 +719,7 @@
          * In order to allow easy storage and retrieval of extensions from DBs, the extension data is built with
          *   dotted syntax instead of a hieararchy of objects. i.e {"parent.child": "value"}
          * @public
-         * @param {String} lang language code
+         * @param {string} lang language code
          * @param {Object} data localization object
          * @returns {i18n} self
          */
@@ -728,7 +743,7 @@
          */
         extendLanguages: function (data) {
             try {
-                for (var lang in data) {
+                for (let lang in data) {
                     if (!data.hasOwnProperty(lang)) continue;
                     if (locs[lang]) {
                         if (!originalLocs[lang]) { // Back it up first
@@ -744,17 +759,17 @@
         /**
          * Retrieve a localized string of a physical file size, assuming that the "size_abbrs" key is available.
          * @public
-         * @param {Number} bytes the number of bytes
+         * @param {number} bytes the number of bytes
          * @returns {LOCALIZED_PHYSICAL_FILE_SIZE} localized size
          */
         physicalSize: function (bytes) {
-            var ret,
-                loc = i18n.t('size_abbrs');
-            if (bytes < 100) ret = { size: bytes, name: loc['b'] };
-            else if (bytes < 101376) ret = { size: bytes / 1024.0, name: loc['kb'] };
-            else if (bytes < 103809024) ret = { size: bytes / 1024.0 / 1024.0, name: loc['mb'] };
-            else if (bytes < 106300440576) ret = { size: bytes / 1024.0 / 1024.0 / 1024.0, name: loc['gb'] };
-            else ret = { size: bytes / 1024.0 / 1024.0 / 1024.0 / 1024.0, name: loc['tb'] };
+            let ret;
+            const loc = i18n.t('size_abbrs');
+            if (bytes < 100) ret = {size: bytes, name: loc['b']};
+            else if (bytes < 101376) ret = {size: bytes / 1024.0, name: loc['kb']};
+            else if (bytes < 103809024) ret = {size: bytes / 1024.0 / 1024.0, name: loc['mb']};
+            else if (bytes < 106300440576) ret = {size: bytes / 1024.0 / 1024.0 / 1024.0, name: loc['gb']};
+            else ret = {size: bytes / 1024.0 / 1024.0 / 1024.0 / 1024.0, name: loc['tb']};
             ret.size = (Math.ceil(ret.size * 100) / 100); // Max two decimal points
             return ret;
         },
@@ -764,50 +779,67 @@
          * Supports all formatting codes known to humanity.
          * @public
          * @param {Date} date The date to format
-         * @param {String} format The format
-         * @param {String|Object|null|?} culture Can accept a culture code, a culture object,
+         * @param {string} format The format
+         * @param {string|Object|null|?} culture Can accept a culture code, a culture object,
          *                                       or a simple "calendar" object which contains the keys "months", "months_short", "days" and "days_short"
-         * @returns {String} A localized date
+         * @returns {string} A localized date
          */
         formatDate: (function () {
 
-            var formatMatcher = /d{1,4}|M{1,4}|yy(?:yy)?|([HhmsTt])\1?|[LloSZ]|UTC|('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])/g,
+            const formatMatcher = /d{1,4}|M{1,4}|yy(?:yy)?|([HhmsTt])\1?|[LloSZ]|UTC|('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])/g,
                 timezone = /\b(?:[PMCEA][SDP]T|[a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)?(?:[-+]\d{4})?)\b/g,
                 timezoneClip = /[^-+\dA-Z]/g;
 
             /** @typedef {{d: function, D: function, M: function, y: function, H: function, m: function, s: function, L: function, o: function, utcd: function, utc: function}} FlagMap */
 
             /** @type {FlagMap} */
-            var flagSubMapLocal = {
-                /** @param {Date} d */ /** @returns {Number} */ 'd': function (d) { return d.getDate(); },
-                /** @param {Date} d */ /** @returns {Number} */ 'D': function (d) { return d.getDay(); },
-                /** @param {Date} d */ /** @returns {Number} */ 'M': function (d) { return d.getMonth(); },
-                /** @param {Date} d */ /** @returns {Number} */ 'y': function (d) { return d.getFullYear(); },
-                /** @param {Date} d */ /** @returns {Number} */ 'H': function (d) { return d.getHours(); },
-                /** @param {Date} d */ /** @returns {Number} */ 'm': function (d) { return d.getMinutes(); },
-                /** @param {Date} d */ /** @returns {Number} */ 's': function (d) { return d.getSeconds(); },
-                /** @param {Date} d */ /** @returns {Number} */ 'L': function (d) { return d.getMilliseconds(); },
-                /** @param {Date} d */ /** @returns {Number} */ 'o': function (d) { return 0; },
-                /** @param {Date} d */ /** @returns {String} */ 'utcd': function (d) { return ((d + '').match(timezone) || ['']).pop().replace(timezoneClip, ''); },
-                /** @param {Date} d */ /** @returns {String} */ 'utc': function (d) { var z = d.getTimezoneOffset(), s = (z > 0 ? '-' : '+'); z = z < 0 ? -z : z; var zm = z % 60; return s + padLeft((z - zm) / 60, 2, '0') + (zm ? padLeft(zm, 2, '0') : ''); }
+            const flagSubMapLocal = {
+                /** @param {Date} d */
+                /** @returns {number} */ 'd': function (d) { return d.getDate(); },
+                /** @param {Date} d */
+                /** @returns {number} */ 'D': function (d) { return d.getDay(); },
+                /** @param {Date} d */
+                /** @returns {number} */ 'M': function (d) { return d.getMonth(); },
+                /** @param {Date} d */
+                /** @returns {number} */ 'y': function (d) { return d.getFullYear(); },
+                /** @param {Date} d */
+                /** @returns {number} */ 'H': function (d) { return d.getHours(); },
+                /** @param {Date} d */
+                /** @returns {number} */ 'm': function (d) { return d.getMinutes(); },
+                /** @param {Date} d */
+                /** @returns {number} */ 's': function (d) { return d.getSeconds(); },
+                /** @param {Date} d */
+                /** @returns {number} */ 'L': function (d) { return d.getMilliseconds(); },
+                /** @param {Date} d */
+                /** @returns {number} */ 'o': function (d) { return 0; },
+                /** @param {Date} d */
+                /** @returns {string} */ 'utcd': function (d) { return ((d + '').match(timezone) || ['']).pop().replace(timezoneClip, ''); },
+                /** @param {Date} d */
+                /** @returns {string} */ 'utc': function (d) {
+                    let z = d.getTimezoneOffset();
+                    const s = (z > 0 ? '-' : '+');
+                    z = z < 0 ? -z : z;
+                    const zm = z % 60;
+                    return s + padLeft((z - zm) / 60, 2, '0') + (zm ? padLeft(zm, 2, '0') : '');
+                }
             };
 
             /** @type {FlagMap} */
-            var flagSubMapUtc = {
-                /** @param {Date} d */ /** @returns {Number} */ 'd': function (d) { return d.getUTCDate(); },
-                /** @param {Date} d */ /** @returns {Number} */ 'D': function (d) { return d.getUTCDay(); },
-                /** @param {Date} d */ /** @returns {Number} */ 'M': function (d) { return d.getUTCMonth(); },
-                /** @param {Date} d */ /** @returns {Number} */ 'y': function (d) { return d.getUTCFullYear(); },
-                /** @param {Date} d */ /** @returns {Number} */ 'H': function (d) { return d.getUTCHours(); },
-                /** @param {Date} d */ /** @returns {Number} */ 'm': function (d) { return d.getUTCMinutes(); },
-                /** @param {Date} d */ /** @returns {Number} */ 's': function (d) { return d.getUTCSeconds(); },
-                /** @param {Date} d */ /** @returns {Number} */ 'L': function (d) { return d.getUTCMilliseconds(); },
-                /** @param {Date} d */ /** @returns {Number} */ 'o': function (d) { return d.getTimezoneOffset(); },
-                /** @param {Date} d */ /** @returns {String} */ 'utcd': function (d) { return "UTC" },
-                /** @param {Date} d */ /** @returns {String} */ 'utc': function (d) { return "Z" }
+            const flagSubMapUtc = {
+                /** @param {Date} d */ /** @returns {number} */ 'd': function (d) { return d.getUTCDate(); },
+                /** @param {Date} d */ /** @returns {number} */ 'D': function (d) { return d.getUTCDay(); },
+                /** @param {Date} d */ /** @returns {number} */ 'M': function (d) { return d.getUTCMonth(); },
+                /** @param {Date} d */ /** @returns {number} */ 'y': function (d) { return d.getUTCFullYear(); },
+                /** @param {Date} d */ /** @returns {number} */ 'H': function (d) { return d.getUTCHours(); },
+                /** @param {Date} d */ /** @returns {number} */ 'm': function (d) { return d.getUTCMinutes(); },
+                /** @param {Date} d */ /** @returns {number} */ 's': function (d) { return d.getUTCSeconds(); },
+                /** @param {Date} d */ /** @returns {number} */ 'L': function (d) { return d.getUTCMilliseconds(); },
+                /** @param {Date} d */ /** @returns {number} */ 'o': function (d) { return d.getTimezoneOffset(); },
+                /** @param {Date} d */ /** @returns {string} */ 'utcd': function () { return "UTC" },
+                /** @param {Date} d */ /** @returns {string} */ 'utc': function () { return "Z" }
             };
 
-            var flagMap = {
+            const flagMap = {
                 /** @param {FlagMap} fmap */ /** @return {string} */
                 'd': function (o, fmap) { return fmap.d(o); },
 
@@ -838,7 +870,7 @@
                 /** @param {FlagMap} fmap */ /** @return {string} */
                 'yyyy': function (o, fmap) { return fmap.y(o); },
 
-                /** @param {FlagMap} fmap */ /** @return {Number} */
+                /** @param {FlagMap} fmap */ /** @return {number} */
                 'h': function (o, fmap) { return fmap.H(o) % 12 || 12; },
 
                 /** @param {FlagMap} fmap */ /** @return {string} */
@@ -866,7 +898,10 @@
                 'l': function (o, fmap) { return padLeft(fmap.L(o), 3, '0'); },
 
                 /** @param {FlagMap} fmap */ /** @return {string} */
-                'L': function (o, fmap) { var L = fmap.L(o); return padLeft(L > 99 ? Math.round(L / 10) : L, 2, '0'); },
+                'L': function (o, fmap) {
+                    const L = fmap.L(o);
+                    return padLeft(L > 99 ? Math.round(L / 10) : L, 2, '0');
+                },
 
                 /** @param {FlagMap} fmap */ /** @return {string} */
                 'f': function (o, fmap) { return Math.floor(fmap.L(o) / 100).toString(); },
@@ -890,25 +925,53 @@
                 'fffffff': function (o, fmap) { return padLeft(fmap.L(o), 3, '0') + '0000'; },
 
                 /** @param {FlagMap} fmap */ /** @return {string} */
-                'F': function (o, fmap) { var v = Math.floor(fmap.L(o) / 100); if (v === 0) return ''; return v.toString(); },
+                'F': function (o, fmap) {
+                    const v = Math.floor(fmap.L(o) / 100);
+                    if (v === 0) return '';
+                    return v.toString();
+                },
 
                 /** @param {FlagMap} fmap */ /** @return {string} */
-                'FF': function (o, fmap) { var v = Math.floor(fmap.L(o) / 10); if (v === 0) return ''; return padLeft(v, 2, '0'); },
+                'FF': function (o, fmap) {
+                    const v = Math.floor(fmap.L(o) / 10);
+                    if (v === 0) return '';
+                    return padLeft(v, 2, '0');
+                },
 
                 /** @param {FlagMap} fmap */ /** @return {string} */
-                'FFF': function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0'); },
+                'FFF': function (o, fmap) {
+                    const v = fmap.L(o);
+                    if (v === 0) return '';
+                    return padLeft(v, 3, '0');
+                },
 
                 /** @param {FlagMap} fmap */ /** @return {string} */
-                'FFFF': function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '0'; },
+                'FFFF': function (o, fmap) {
+                    const v = fmap.L(o);
+                    if (v === 0) return '';
+                    return padLeft(v, 3, '0') + '0';
+                },
 
                 /** @param {FlagMap} fmap */ /** @return {string} */
-                'FFFFF': function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '00'; },
+                'FFFFF': function (o, fmap) {
+                    const v = fmap.L(o);
+                    if (v === 0) return '';
+                    return padLeft(v, 3, '0') + '00';
+                },
 
                 /** @param {FlagMap} fmap */ /** @return {string} */
-                'FFFFFF': function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '000'; },
+                'FFFFFF': function (o, fmap) {
+                    const v = fmap.L(o);
+                    if (v === 0) return '';
+                    return padLeft(v, 3, '0') + '000';
+                },
 
                 /** @param {FlagMap} fmap */ /** @return {string} */
-                'FFFFFFF': function (o, fmap) { var v = fmap.L(o); if (v === 0) return ''; return padLeft(v, 3, '0') + '0000'; },
+                'FFFFFFF': function (o, fmap) {
+                    const v = fmap.L(o);
+                    if (v === 0) return '';
+                    return padLeft(v, 3, '0') + '0000';
+                },
 
                 't': function (o, fmap, culture) {
                     return fmap.H(o) < 12 ?
@@ -941,10 +1004,16 @@
                 'UTC': function (o, fmap) { return fmap.utcd(o) },
 
                 /** @param {FlagMap} fmap */ /** @return {string} */
-                'o': function (o, fmap) { o = fmap.o(o); return (o > 0 ? "-" : "+") + padLeft(Math.floor(Math.abs(o) / 60) * 100 + Math.abs(o) % 60, 4, '0') },
+                'o': function (o, fmap) {
+                    o = fmap.o(o);
+                    return (o > 0 ? "-" : "+") + padLeft(Math.floor(Math.abs(o) / 60) * 100 + Math.abs(o) % 60, 4, '0')
+                },
 
                 /** @param {FlagMap} fmap */ /** @return {string} */
-                'S': function (o, fmap) { var d = fmap.d(o); return ["th", "st", "nd", "rd"][d % 10 > 3 ? 0 : (d % 100 - d % 10 != 10) * d % 10] }
+                'S': function (o, fmap) {
+                    const d = /**@type number*/fmap.d(o);
+                    return ["th", "st", "nd", "rd"][d % 10 > 3 ? 0 : (d % 100 - d % 10 !== 10) * d % 10]
+                }
             };
 
             return function (date, format, culture) {
@@ -974,7 +1043,7 @@
 
                 if (isNaN(date)) throw new SyntaxError("invalid date");
 
-                var utc = false;
+                let utc = false;
 
                 if (!format) {
                     format = 'yyyy-MM-dd'; // ISO
@@ -991,7 +1060,7 @@
                     utc = true;
                 }
 
-                var f = utc ? flagSubMapUtc : flagSubMapLocal;
+                const f = utc ? flagSubMapUtc : flagSubMapLocal;
 
                 return format.replace(formatMatcher, function (token) {
                     return (token in flagMap) ? (flagMap[token])(date, f, culture) : token.slice(1, token.length - 1);
@@ -1009,11 +1078,11 @@
          * This function actually uses the `createDateParser(...)` function, and caches the result.
          * @public
          * @expose
-         * @param {String} date The date to parse
-         * @param {String?} format The format. Defaults to UTC ISO. (yyyy-MM-DD'T'HH:mm:ssZ)
-         * @param {String|Object|null|?} culture Can accept a culture code, a culture object,
+         * @param {string} date The date to parse
+         * @param {string?} format The format. Defaults to UTC ISO. (yyyy-MM-DD'T'HH:mm:ssZ)
+         * @param {string|Object|null|?} culture Can accept a culture code, a culture object,
          *                                       or a simple "calendar" object which contains the keys "months", "months_short", "days" and "days_short"
-         * @param {Boolean?} strict Should the parser be strict? false by default, forgiving missing digits etc.
+         * @param {boolean?} strict Should the parser be strict? false by default, forgiving missing digits etc.
          * @returns {Date} The parsed date
          */
         parseDate: function (date, format, culture, strict) {
@@ -1032,7 +1101,7 @@
                 if ('parse' in Date) {
                     return new Date(date);
                 } else {
-                    var parsed = this.parseDate(date, 'yyyy-MM-dd\'T\'HH:mm:ss[.FFFFFFF]Z', culture, true);
+                    let parsed = this.parseDate(date, 'yyyy-MM-dd\'T\'HH:mm:ss[.FFFFFFF]Z', culture, true);
                     if (isNaN(+parsed)) parsed = this.parseDate(date, 'yyyy-MM-dd', culture, true);
                     if (isNaN(+parsed)) parsed = this.parseDate(date, 'ddd, dd, MMM yyyy HH:mm:ss Z', culture, true);
                     if (isNaN(+parsed)) parsed = this.parseDate(date, 'dddd, dd-MMM-yy HH:mm:ss Z', culture, true);
@@ -1041,7 +1110,7 @@
                 }
             }
 
-            var compiled = culture[strict ? '_compiledParsersE' : '_compiledParsers'];
+            let compiled = culture[strict ? '_compiledParsersE' : '_compiledParsers'];
             if (!compiled) {
                 culture[strict ? '_compiledParsersE' : '_compiledParsers'] = compiled = {};
             }
@@ -1061,65 +1130,65 @@
          * If year is missing, it will default to current year. Anything else will default to zero.
          * @public
          * @expose
-         * @param {String} format The format
+         * @param {string} format The format
          * @param {Object} culture An object which contains the keys "months", "months_short", "days" and "days_short"
-         * @param {Boolean} strict Should the parser be strict? false by default, forgiving missing digits etc.
-         * @returns {function(String):Date} The parser function
+         * @param {boolean} strict Should the parser be strict? false by default, forgiving missing digits etc.
+         * @returns {function(string):Date} The parser function
          */
         createDateParser: (function () {
-            var partsRgx = /('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])|yyyy|yy|MMMM|MMM|MM|M|dddd|ddd|dd|d|HH|H|hh|h|mm|m|ss|s|l|L|f|ff|fff|ffff|fffff|ffffff|fffffff|F|FF|FFF|FFFF|FFFFF|FFFFFF|FFFFFFF|tt|t|TT|T|Z|UTC|o|S|.+?/g;
+            const partsRgx = /('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])|yyyy|yy|MMMM|MMM|MM|M|dddd|ddd|dd|d|HH|H|hh|h|mm|m|ss|s|l|L|f|ff|fff|ffff|fffff|ffffff|fffffff|F|FF|FFF|FFFF|FFFFF|FFFFFF|FFFFFFF|tt|t|TT|T|Z|UTC|o|S|.+?/g;
 
-            var arrayToRegex = function (array) {
-                var regex = '';
-                for (var i = 0; i < array.length; i++) {
+            const arrayToRegex = function (array) {
+                let regex = '';
+                for (let i = 0; i < array.length; i++) {
                     if (i > 0) regex += '|';
                     regex += regexEscape(array[i]);
                 }
                 return regex;
             };
 
-            var regexMap = {
-                'yyyy': function (c, s) { return s ? '[0-9]{4}' : '[0-9]{2}|[0-9]{4}'; },
-                'yy': function (c, s) { return '[0-9]{2}'; },
-                'MMMM': function (c, s) { return arrayToRegex(c['months']); },
-                'MMM': function (c, s) { return arrayToRegex(c['months_short']); },
-                'MM': function (c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
-                'M': function (c, s) { return '[0-9]{1,2}'; },
-                'dddd': function (c, s) { return arrayToRegex(c['days']); },
-                'ddd': function (c, s) { return arrayToRegex(c['days_short']); },
-                'dd': function (c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
-                'd': function (c, s) { return '[0-9]{1,2}'; },
-                'HH': function (c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
-                'H': function (c, s) { return '[0-9]{1,2}'; },
-                'hh': function (c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
-                'h': function (c, s) { return '[0-9]{1,2}'; },
-                'mm': function (c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
-                'm': function (c, s) { return '[0-9]{1,2}'; },
-                'ss': function (c, s) { return s ? '[0-9]{2}' : '[0-9]{1,2}'; },
-                's': function (c, s) { return '[0-9]{1,2}'; },
-                'l': function (c, s) { return '[0-9]{3}'; },
-                'L': function (c, s) { return '[0-9]{2}'; },
-                'f': function (c, s) { return '[0-9]{1}'; },
-                'ff': function (c, s) { return '[0-9]{2}'; },
-                'fff': function (c, s) { return '[0-9]{3}'; },
-                'ffff': function (c, s) { return '[0-9]{4}'; },
-                'fffff': function (c, s) { return '[0-9]{5}'; },
-                'ffffff': function (c, s) { return '[0-9]{6}'; },
-                'fffffff': function (c, s) { return '[0-9]{7}'; },
-                'F': function (c, s) { return '[0-9]{0,1}'; },
-                'FF': function (c, s) { return '[0-9]{0,2}'; },
-                'FFF': function (c, s) { return '[0-9]{0,3}'; },
-                'FFFF': function (c, s) { return '[0-9]{0,4}'; },
-                'FFFFF': function (c, s) { return '[0-9]{0,5}'; },
-                'FFFFFF': function (c, s) { return '[0-9]{0,6}'; },
-                'FFFFFFF': function (c, s) { return '[0-9]{0,7}'; },
-                'tt': function (c, s) {
-                    var am1 = c['am_lower'] || 'am';
-                    var pm1 = c['pm_lower'] || 'pm';
-                    var am2 = c['am_upper'] || 'AM';
-                    var pm2 = c['pm_upper'] || 'PM';
+            const regexMap = {
+                'yyyy': (c, s) => s ? '[0-9]{4}' : '[0-9]{2}|[0-9]{4}',
+                'yy': () => '[0-9]{2}',
+                'MMMM': (c) => arrayToRegex(c['months']),
+                'MMM': (c) => arrayToRegex(c['months_short']),
+                'MM': (c, s) => s ? '[0-9]{2}' : '[0-9]{1,2}',
+                'M': () => '[0-9]{1,2}',
+                'dddd': (c) => arrayToRegex(c['days']),
+                'ddd': (c) => arrayToRegex(c['days_short']),
+                'dd': (c, s) => s ? '[0-9]{2}' : '[0-9]{1,2}',
+                'd': () => '[0-9]{1,2}',
+                'HH': (c, s) => s ? '[0-9]{2}' : '[0-9]{1,2}',
+                'H': () => '[0-9]{1,2}',
+                'hh': (c, s) => s ? '[0-9]{2}' : '[0-9]{1,2}',
+                'h': () => '[0-9]{1,2}',
+                'mm': (c, s) => s ? '[0-9]{2}' : '[0-9]{1,2}',
+                'm': () => '[0-9]{1,2}',
+                'ss': (c, s) => s ? '[0-9]{2}' : '[0-9]{1,2}',
+                's': () => '[0-9]{1,2}',
+                'l': () => '[0-9]{3}',
+                'L': () => '[0-9]{2}',
+                'f': () => '[0-9]{1}',
+                'ff': () => '[0-9]{2}',
+                'fff': () => '[0-9]{3}',
+                'ffff': () => '[0-9]{4}',
+                'fffff': () => '[0-9]{5}',
+                'ffffff': () => '[0-9]{6}',
+                'fffffff': () => '[0-9]{7}',
+                'F': () => '[0-9]{0,1}',
+                'FF': () => '[0-9]{0,2}',
+                'FFF': () => '[0-9]{0,3}',
+                'FFFF': () => '[0-9]{0,4}',
+                'FFFFF': () => '[0-9]{0,5}',
+                'FFFFFF': () => '[0-9]{0,6}',
+                'FFFFFFF': () => '[0-9]{0,7}',
+                'tt': (c) => {
+                    const am1 = c['am_lower'] || 'am';
+                    const pm1 = c['pm_lower'] || 'pm';
+                    const am2 = c['am_upper'] || 'AM';
+                    const pm2 = c['pm_upper'] || 'PM';
 
-                    var all = generateAllCasePermutations(am1)
+                    let all = generateAllCasePermutations(am1)
                         .concat(generateAllCasePermutations(pm1));
 
                     if (am1.toLowerCase() !== am2.toLowerCase()) {
@@ -1132,13 +1201,13 @@
 
                     return arrayToRegex(all);
                 },
-                't': function (c, s) {
-                    var am1 = c['am_short_lower'] || 'a';
-                    var pm1 = c['pm_short_lower'] || 'p';
-                    var am2 = c['am_short_upper'] || 'A';
-                    var pm2 = c['pm_short_upper'] || 'P';
+                't': (c) => {
+                    const am1 = c['am_short_lower'] || 'a';
+                    const pm1 = c['pm_short_lower'] || 'p';
+                    const am2 = c['am_short_upper'] || 'A';
+                    const pm2 = c['pm_short_upper'] || 'P';
 
-                    var all = generateAllCasePermutations(am1)
+                    let all = generateAllCasePermutations(am1)
                         .concat(generateAllCasePermutations(pm1));
 
                     if (am1.toLowerCase() !== am2.toLowerCase()) {
@@ -1151,23 +1220,23 @@
 
                     return arrayToRegex(all);
                 },
-                'TT': function (c, s) { return regexMap['tt'](c, s); },
-                'T': function (c, s) { return regexMap['t'](c, s); },
-                'Z': function (c, s) { return 'Z|(?:GMT|UTC)?[+-][0-9]{2,4}(?:\\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\\))?'; },
-                'UTC': function (c, s) { return '[+-][0-9]{2,4}'; },
-                'o': function (c, s) { return '[+-][0-9]{4}'; },
-                'S': function (c, s) { return 'th|st|nd|rd'; }
+                'TT': (c, s) => regexMap['tt'](c, s),
+                'T': (c, s) => regexMap['t'](c, s),
+                'Z': () => 'Z|(?:GMT|UTC)?[+-][0-9]{2,4}(?:\\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\\))?',
+                'UTC': () => '[+-][0-9]{2,4}',
+                'o': () => '[+-][0-9]{4}',
+                'S': () => 'th|st|nd|rd'
             };
 
-            return function (format, culture, strict) {
+            return (format, culture, strict) => {
 
-                var regex = '';
-                var regexParts = [];
+                let regex = '';
+                const regexParts = [];
 
-                var processFormat = function (format) {
-                    var formatParts = format.match(partsRgx);
+                const processFormat = function (format) {
+                    const formatParts = format.match(partsRgx);
 
-                    var i, count, part, shouldStrict;
+                    let i, count, part, shouldStrict;
 
                     // Remove all empty groups
                     for (i = 0, count = formatParts.length; i < count; i++) {
@@ -1219,24 +1288,27 @@
                 regex = new RegExp('^' + regex + '$');
 
                 // This is for calculating which side to go for 2 digit years
-                var baseYear = Math.floor((new Date()).getFullYear() / 100) * 100;
+                const baseYear = Math.floor((new Date()).getFullYear() / 100) * 100;
 
                 // Return a parser function
-                return function (date) {
+                return date => {
                     date = date + '';
-                    var parts = date.match(regex);
+                    const parts = date.match(regex);
                     if (!parts) return null;
 
                     parts.splice(0, 1); // Remove main capture group 0
 
-                    var now = new Date(),
+                    const now = new Date(),
                         nowYear = now.getFullYear();
-                    var year = null, month = null, day = null,
+                    let year = null, month = null, day = null,
                         hours = null, hours12 = false, hoursTT, minutes = null,
                         seconds = null, milliseconds = null,
                         timezone = null;
 
-                    for (var i = 0, len = parts.length, part, tmp; i < len; i++) {
+                    let i = 0;
+                    const len = parts.length;
+                    let part, tmp;
+                    for (; i < len; i++) {
                         part = parts[i];
                         switch (regexParts[i]) {
                             case 'yyyy':
@@ -1317,19 +1389,29 @@
                                 }
                                 break;
 
-                            case 'f': case 'ff': case 'fff': case 'ffff':
-                            case 'fffff': case 'ffffff': case 'fffffff':
-                            case 'F': case 'FF': case 'FFF': case 'FFFF':
-                            case 'FFFFF': case 'FFFFFF': case 'FFFFFFF':
-                            if (part.length > 3) {
-                                part = part.substr(0, 3) + '.' + part.substr(3);
-                            } else if (part.length < 3) {
-                                while (part.length < 3) {
-                                    part += '0';
+                            case 'f':
+                            case 'ff':
+                            case 'fff':
+                            case 'ffff':
+                            case 'fffff':
+                            case 'ffffff':
+                            case 'fffffff':
+                            case 'F':
+                            case 'FF':
+                            case 'FFF':
+                            case 'FFFF':
+                            case 'FFFFF':
+                            case 'FFFFFF':
+                            case 'FFFFFFF':
+                                if (part.length > 3) {
+                                    part = part.substr(0, 3) + '.' + part.substr(3);
+                                } else if (part.length < 3) {
+                                    while (part.length < 3) {
+                                        part += '0';
+                                    }
                                 }
-                            }
-                            milliseconds = parseFloat(part);
-                            break;
+                                milliseconds = parseFloat(part);
+                                break;
 
                             case 'tt':
                             case 't':
@@ -1343,7 +1425,7 @@
                             case 'Z':
                             case 'UTC':
                             case 'o':
-                                var tz = part.match(/(Z)|(?:GMT|UTC)?([+-][0-9]{2,4})(?:\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\))?/);
+                                const tz = part.match(/(Z)|(?:GMT|UTC)?([+-][0-9]{2,4})(?:\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\))?/);
                                 if (tz[1] === 'Z') {
                                     timezone = 0;
                                 } else if (tz[2]) {
@@ -1368,7 +1450,7 @@
                             if (hours < 12) hours += 12;
                         }
                     }
-                    var parsedDate = new Date(year, month, day, hours || 0, minutes || 0, seconds || 0, milliseconds || 0);
+                    const parsedDate = new Date(year, month, day, hours || 0, minutes || 0, seconds || 0, milliseconds || 0);
                     if (timezone !== null) {
                         timezone += parsedDate.getTimezoneOffset();
                     }
@@ -1386,8 +1468,8 @@
          * Currently browsers do not seem to behave and use the correct formats of the OS!
          * @public
          * @expose
-         * @param {String} fallback a fallback date for a case where the browser does not support this functionality.
-         * @returns {String} the detected format, the fallback, or dd/MM/yyyy as default.
+         * @param {string} fallback a fallback date for a case where the browser does not support this functionality.
+         * @returns {string} the detected format, the fallback, or dd/MM/yyyy as default.
          */
         detectShortDateFormat: function (fallback) {
             if (!Date.prototype.toLocaleDateString) return fallback || 'dd/MM/yyyy';
@@ -1402,9 +1484,9 @@
          * Format a number for display using the correct decimal separator detected from the browser.
          * @public
          * @expose
-         * @param {Number|String|null} value the value to format.
-         * @param {Boolean=} thousands should we add a thousands separator
-         * @returns {String} The formatted number as string.
+         * @param {number|string|null} value the value to format.
+         * @param {boolean=} thousands should we add a thousands separator
+         * @returns {string} The formatted number as string.
          *                   If null or empty string is supplied, then an empty string is returned.
          *                   If a string was supplied, it is returned as-is.
          */
@@ -1413,22 +1495,22 @@
             if (typeof value === 'number') {
                 value = value.toString();
 
-                var decimalSep = active.options.decimal,
+                const decimalSep = active.options.decimal,
                     thousandsSep = active.options.thousands;
 
                 if (decimalSep !== '.') {
                     value = value.replace(/\./g, decimalSep);
                 }
                 if (thousands) {
-                    var decIndex = value.indexOf(decimalSep);
+                    let decIndex = value.indexOf(decimalSep);
                     if (decIndex === -1) {
                         decIndex = value.length;
                     }
-                    var sign = value.charAt(0) === '-' ? 1 : 0;
+                    const sign = value.charAt(0) === '-' ? 1 : 0;
                     if (decIndex - sign > 3) {
-                        var sepValue = '';
-                        var major = value.substr(sign, decIndex - sign);
-                        var fromIndex = 0, toIndex = major.length % 3;
+                        let sepValue = '';
+                        const major = value.substr(sign, decIndex - sign);
+                        let fromIndex = 0, toIndex = major.length % 3;
                         while (fromIndex < major.length) {
                             if (fromIndex > 0) {
                                 sepValue += thousandsSep;
@@ -1452,9 +1534,9 @@
          * If `thousands` is `true`, then it will allow parsing with the separator.
          * @public
          * @expose
-         * @param {Number|String|null} value the value to parse.
-         * @param {Boolean?} [thousands=false] - Don't break when there are thousands separators in the value
-         * @returns {Number|null} The parsed number.
+         * @param {number|string|null} value the value to parse.
+         * @param {boolean?} [thousands=false] - Don't break when there are thousands separators in the value
+         * @returns {number|null} The parsed number.
          *                   If null or empty string is supplied, then null is returned.
          *                   If a number was supplied, it is returned as-is.
          */
@@ -1527,7 +1609,7 @@
          *                For g specifier: This is the maximum number of significant digits to be printed.
          *                For s: this is the maximum number of characters to be printed
          *
-         * @param {String} value - the value to process
+         * @param {string} value - the value to process
          * @param {Object?} data - the data for post processing. Passed to {...} specifiers too.
          * @returns {string} the processed value
          */
@@ -1537,9 +1619,9 @@
 
             value = value.replace(/(\\*)(\{{1,2})([^|{}"]+)((?:\|[^|{}]+)*?)(}{1,2})/g, function () {
 
-                var precedingBackslahes = arguments[1];
-                var openingBrackets = arguments[2];
-                var closingBrackets = arguments[5];
+                const precedingBackslahes = arguments[1];
+                const openingBrackets = arguments[2];
+                const closingBrackets = arguments[5];
 
                 if ((precedingBackslahes.length & 1) === 1) {
                     return arguments[0].substr(precedingBackslahes.length - (precedingBackslahes.length - 1) / 2);
@@ -1549,40 +1631,41 @@
                     return arguments[0];
                 }
 
-                var value, key = arguments[3];
-                var i, len;
+                let value;
+                const key = arguments[3];
+                let i, len;
 
-                var filters = arguments[4];
-                    
+                let filters = arguments[4];
+                if (filters)
+                    filters = filters.split('|');
+
                 if (openingBrackets.length === 1) {
 
                     /** @type string|null */
-                    var gender = null;
-                    if (filters && filters[0] === 'g' && filters[1] === ':') {
-                        gender = i18n.t(modifiers[0].substr(2));
+                    let gender = null;
+                    if (filters && filters[0][0] === 'g' && filters[0][1] === ':') {
+                        gender = i18n.t(filters[0].substr(2));
 
                         if (gender === 'male') {
                             gender = 'm';
-                        }
-                        else if (gender == 'female') {
+                        } else if (gender === 'female') {
                             gender = 'f';
                         }
                     }
-                        
+
                     if (gender !== null) {
                         value = i18n.t(key + '.' + gender);
                         if (value === undefined) value = i18n.t(key + '.neutral');
                         if (value === undefined) value = i18n.t(key + '.');
                         if (value === undefined) value = i18n.t(key + '.m');
                         if (value === undefined) value = i18n.t(key + '.f');
-                    }
-                    else {
+                    } else {
                         value = i18n.t(key, data);
                     }
 
                 } else {
 
-                    var keys = key.split('.');
+                    const keys = key.split('.');
                     value = data;
                     for (i = 0, len = keys.length; i < len && value; i++) {
                         value = value[keys[i]];
@@ -1594,7 +1677,7 @@
                 }
 
                 if (arguments[4]) {
-                    var filters = arguments[4].split('|');
+                    filters = arguments[4].split('|');
                     for (i = 0, len = filters.length; i < len; i++) {
                         if (!filters[i]) continue;
                         value = encodeValue(value, filters[i]);
@@ -1606,25 +1689,23 @@
                 }
 
                 return (precedingBackslahes.length ?
-                        precedingBackslahes.substr(precedingBackslahes.length / 2) :
-                        '') + value;
+                    precedingBackslahes.substr(precedingBackslahes.length / 2) :
+                    '') + value;
             });
 
             value = value.replace(/t\(("[^"]+?"|'[^']+?'|[^,)]+?)(?:,\s*(\{.*?}))?\)/g, function () {
 
-                var key = arguments[1],
+                let key = arguments[1],
                     options = arguments[2];
                 try {
                     key = JSON.parse(key);
-                }
-                catch (e) {
+                } catch (e) {
                     return arguments[0];
                 }
                 if (options) {
                     try {
                         options = JSON.parse(options);
-                    }
-                    catch (e) {
+                    } catch (e) {
                         options = null;
                     }
                 }
@@ -1642,8 +1723,8 @@
     // Helper function to extend an object using a synthetic object structure from dotted syntax to a real nested structure.
     function extendDotted(target, data) {
         if (data == null) return;
-        var dotted, targetDotted, i;
-        for (var key in data) {
+        let dotted, targetDotted, i;
+        for (let key in data) {
             if (!data.hasOwnProperty(key) || !data[key]) continue;
             dotted = key.split('.');
             targetDotted = target;
@@ -1657,16 +1738,16 @@
     /**
      * @typedef LOCALIZED_PHYSICAL_FILE_SIZE
      * */
-    var LOCALIZED_PHYSICAL_FILE_SIZE = {
+    const LOCALIZED_PHYSICAL_FILE_SIZE = {
         /**
          * @expose
-         * @type {Number}
+         * @type {number}
          * */
         size: 0,
 
         /**
          * @expose
-         * @type {String}
+         * @type {string}
          * */
         name: ''
     };
@@ -1674,14 +1755,14 @@
     /**
      * This function returns a key suffix for plural form, for the specified count.
      * @function PLURAL_FORM_FUNCTION
-     * @param {Number} count the number that we need to inspect
+     * @param {number} count the number that we need to inspect
      * @returns {string}
      */
 
     /**
      * @typedef ADD_LANGUAGE_OPTIONS
      * */
-    var ADD_LANGUAGE_OPTIONS = {
+    const ADD_LANGUAGE_OPTIONS = {
         /**
          * function that takes a number, and returns a key suffix for plural form of that count.
          * @expose
@@ -1692,14 +1773,14 @@
         /**
          * decimal separator character. The default is auto-detected from the browser locale
          * @expose
-         * @type {String}
+         * @type {string}
          * */
         decimal: '.',
 
         /**
          * thousands separator character. The default is auto-detected from the browser locale
          * @expose
-         * @type {String}
+         * @type {string}
          * */
         thousands: ','
     };
