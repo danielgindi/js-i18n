@@ -1,5 +1,5 @@
 /*!
- * js-i18n 1.1.7
+ * js-i18n 1.1.8
  * https://github.com/danielgindi/js-i18n
  */
 (function (global, factory) {
@@ -3267,8 +3267,13 @@
         var i, len;
 
         var filters = arguments[4];
-        if (filters)
-        filters = filters.length > 0 ? filters.split('|') : EMPTY_ARRAY;
+        if (filters) {
+          filters = filters.length > 0 ? filters.split('|') : EMPTY_ARRAY;
+
+          // Remove first | split (always empty) so gender could be quickly matched
+          while (filters[0] === '') {
+            filters.shift();}
+        }
 
         if (openingBrackets.length === 1) {
 

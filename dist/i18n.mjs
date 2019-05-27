@@ -1,5 +1,5 @@
 /*!
- * js-i18n 1.1.7
+ * js-i18n 1.1.8
  * https://github.com/danielgindi/js-i18n
  */
 // Helper function to extend an object using a synthetic object structure from dotted syntax to a real nested structure.
@@ -1606,8 +1606,13 @@ const i18n = {
       let i, len;
 
       let filters = arguments[4];
-      if (filters)
-      filters = filters.length > 0 ? filters.split('|') : EMPTY_ARRAY;
+      if (filters) {
+        filters = filters.length > 0 ? filters.split('|') : EMPTY_ARRAY;
+
+        // Remove first | split (always empty) so gender could be quickly matched
+        while (filters[0] === '')
+        filters.shift();
+      }
 
       if (openingBrackets.length === 1) {
 
