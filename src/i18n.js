@@ -1037,8 +1037,13 @@ const i18n = {
             let i, len;
 
             let filters = arguments[4];
-            if (filters)
+            if (filters) {
                 filters = filters.length > 0 ? filters.split('|') : EMPTY_ARRAY;
+                
+                // Remove first | split (always empty) so gender could be quickly matched
+                while (filters[0] === '')
+                    filters.shift();
+            }
 
             if (openingBrackets.length === 1) {
 
