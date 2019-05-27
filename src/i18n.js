@@ -22,6 +22,7 @@ import {applySpecifiers} from './printf_specs.js';
  */
 
 const DEFAULT_DECIMAL_SEPARATOR = (1.1).toLocaleString().substr(1, 1);
+const EMPTY_ARRAY = [];
 
 let activeLanguage = '';
 let fallbackLanguage = '';
@@ -188,7 +189,7 @@ const i18n = {
         if (typeof args[0] === 'string' && typeof args[1] !== 'string') {
             keys = args[argIndex++];
             if (keys.length === 0) {
-                keys = [];
+                keys = EMPTY_ARRAY;
             } else {
                 keys = keys.split('.');
             }
@@ -1037,7 +1038,7 @@ const i18n = {
 
             let filters = arguments[4];
             if (filters)
-                filters = filters.split('|');
+                filters = filters.length > 0 ? filters.split('|') : EMPTY_ARRAY;
 
             if (openingBrackets.length === 1) {
 
@@ -1076,12 +1077,9 @@ const i18n = {
 
             }
 
-            if (arguments[4]) {
-                filters = arguments[4].split('|');
-                for (i = 0, len = filters.length; i < len; i++) {
-                    if (!filters[i]) continue;
-                    value = encodeValue(value, filters[i]);
-                }
+            for (i = 0, len = filters.length; i < len; i++) {
+                if (filters[i].length === 0) continue;
+                value = encodeValue(value, filters[i]);
             }
 
             if (closingBrackets.length > openingBrackets.length) {
