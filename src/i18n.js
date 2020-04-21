@@ -885,47 +885,63 @@ const i18n = {
      * Format a number for display using the correct decimal separator detected from the browser.
      * @public
      * @expose
-     * @param {number|string|null} value the value to format.
+     * @param {number|null} value the value to format.
      * @param {boolean=} thousands should we add a thousands separator
      * @returns {string} The formatted number as string.
      *                   If null or empty string is supplied, then an empty string is returned.
-     *                   If a string was supplied, it is returned as-is.
+     *                   If anything other than a `Number` was supplied, it is only processed by calling `.toLocaleString()`.
      */
     displayNumber: function (value, thousands) {
-        if (value === '' || value == null) return '';
+        if (value === null || value === undefined) return '';
+
         if (typeof value === 'number') {
             value = value.toString();
-
-            const decimalSep = active.options.decimal,
-                thousandsSep = active.options.thousands;
-
-            if (decimalSep !== '.') {
-                value = value.replace(/\./g, decimalSep);
-            }
-            if (thousands) {
-                let decIndex = value.indexOf(decimalSep);
-                if (decIndex === -1) {
-                    decIndex = value.length;
-                }
-                const sign = value.charAt(0) === '-' ? 1 : 0;
-                if (decIndex - sign > 3) {
-                    let sepValue = '';
-                    const major = value.substr(sign, decIndex - sign);
-                    let fromIndex = 0, toIndex = major.length % 3;
-                    while (fromIndex < major.length) {
-                        if (fromIndex > 0) {
-                            sepValue += thousandsSep;
-                        }
-                        sepValue += major.substring(fromIndex, toIndex);
-                        fromIndex = toIndex;
-                        toIndex = fromIndex + 3;
-                    }
-                    value = (sign ? '-' : '') + sepValue + value.substr(decIndex);
-                }
-            }
-            return value;
+            return i18n.formatRawNumberStringForDisplay(value, thousands);
         }
+
         return value.toLocaleString();
+    },
+
+    /**
+     * Format a stringified number for display using the correct decimal separator detected from the browser.
+     * @public
+     * @expose
+     * @param {string} value the value to format.
+     * @param {boolean=} thousands should we add a thousands separator
+     * @returns {string} The formatted number as string.
+     */
+    formatRawNumberStringForDisplay: function (value, thousands) {
+        if (value === '') return '';
+
+        const decimalSep = active.options.decimal,
+            thousandsSep = active.options.thousands;
+
+        if (decimalSep !== '.') {
+            value = value.replace(/\./g, decimalSep);
+        }
+        if (thousands) {
+            let decIndex = value.indexOf(decimalSep);
+            if (decIndex === -1) {
+                decIndex = value.length;
+            }
+            const sign = value.charAt(0) === '-' ? 1 : 0;
+            if (decIndex - sign > 3) {
+                let sepValue = '';
+                const major = value.substr(sign, decIndex - sign);
+                let fromIndex = 0, toIndex = major.length % 3;
+                while (fromIndex < major.length) {
+                    if (fromIndex > 0) {
+                        sepValue += thousandsSep;
+                    }
+                    sepValue += major.substring(fromIndex, toIndex);
+                    fromIndex = toIndex;
+                    toIndex = fromIndex + 3;
+                }
+                value = (sign ? '-' : '') + sepValue + value.substr(decIndex);
+            }
+        }
+
+        return value;
     },
 
     /**
