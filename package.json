@@ -3,7 +3,7 @@
   "version": "1.1.8",
   "description": "An i18n library, with support for plurals, dates, C style format specifiers and more.",
   "main": "dist/i18n.cjs.min.js",
-  "module": "dist/i18n.min.mjs",
+  "module": "dist/i18n.es6.min.js",
   "broswer": "dist/i18n.umd.min.js",
   "repository": {
     "type": "git",
@@ -27,18 +27,18 @@
   },
   "homepage": "https://github.com/danielgindi/js-i18n",
   "devDependencies": {
-    "@babel/core": "^7.4.5",
-    "@babel/plugin-transform-runtime": "^7.4.4",
-    "@babel/polyfill": "^7.4.4",
-    "@babel/preset-env": "^7.4.5",
-    "@babel/runtime": "^7.4.4",
+    "@babel/core": "^7.9.0",
+    "@babel/plugin-transform-runtime": "^7.9.0",
+    "@babel/polyfill": "^7.8.7",
+    "@babel/preset-env": "^7.9.5",
+    "@babel/runtime": "^7.9.2",
     "babelify": "^10.0.0",
-    "core-js": "^3.0.1",
-    "fs-extra": "^8.0.1",
-    "rollup": "^1.11.3",
-    "rollup-plugin-babel": "^4.3.2",
-    "rollup-plugin-commonjs": "^10.0.0",
-    "rollup-plugin-node-resolve": "^5.0.0",
-    "rollup-plugin-terser": "^5.0.0"
+    "core-js": "^3.6.5",
+    "fs-extra": "^9.0.0",
+    "rollup": "^2.6.1",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-terser": "^5.3.0"
   }
 }
