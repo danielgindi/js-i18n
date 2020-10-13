@@ -13,6 +13,7 @@ const Path = require('path');
         dest: 'dist/i18n.es6.js',
         sourceMap: true,
         outputFormat: 'esm',
+        outputExports: 'auto',
         babelTargets: {
             node: 10,
         },
@@ -22,6 +23,7 @@ const Path = require('path');
         dest: 'dist/i18n.es6.min.js',
         sourceMap: true,
         outputFormat: 'esm',
+        outputExports: 'auto',
         babelTargets: {
             node: 10,
         },
@@ -31,6 +33,7 @@ const Path = require('path');
         dest: 'dist/i18n.umd.js',
         sourceMap: true,
         outputFormat: 'umd',
+        outputExports: 'auto',
         babelTargets: '> 0.25%, not dead',
         minified: false,
         ecmaVersion: 6,
@@ -39,6 +42,7 @@ const Path = require('path');
         dest: 'dist/i18n.umd.min.js',
         sourceMap: true,
         outputFormat: 'umd',
+        outputExports: 'auto',
         babelTargets: '> 0.25%, not dead',
         minified: true,
         ecmaVersion: 6,
@@ -47,6 +51,7 @@ const Path = require('path');
         dest: 'dist/i18n.cjs.js',
         sourceMap: true,
         outputFormat: 'cjs',
+        outputExports: 'auto',
         babelTargets: {
             node: 10,
         },
@@ -56,6 +61,7 @@ const Path = require('path');
         dest: 'dist/i18n.cjs.min.js',
         sourceMap: true,
         outputFormat: 'cjs',
+        outputExports: 'auto',
         babelTargets: {
             node: 10,
         },
@@ -129,20 +135,21 @@ const Path = require('path');
         });
 
         const bundle = await Rollup.rollup({
-                preserveSymlinks: true,
-                treeshake: true,
-                onwarn(warning, warn) {
-                    if (warning.code === 'THIS_IS_UNDEFINED') return;
-                    warn(warning);
-                },
-                input: inputFile,
-                plugins: plugins,
-            });
+            preserveSymlinks: true,
+            treeshake: true,
+            onwarn(warning, warn) {
+                if (warning.code === 'THIS_IS_UNDEFINED') return;
+                warn(warning);
+            },
+            input: inputFile,
+            plugins: plugins,
+        });
 
         let generated = await bundle.generate({
             name: task.outputName,
             sourcemap: task.sourceMap,
             format: task.outputFormat,
+            exports: task.outputExports,
         });
 
         let code = generated.output[0].code;
