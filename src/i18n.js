@@ -1,15 +1,17 @@
 'use strict';
 
-import {extendDotted, regexEscape} from './utils.js';
+import { extendDotted, regexEscape } from './utils';
 import {
     DATE_FORMAT_REGEX,
     DATE_FLAG_SUBMAP_LOCAL,
     DATE_FLAG_SUBMAP_UTC,
     DATE_FLAG_MAP,
     DATE_PARSER_FORMAT_REGEX,
-    DATE_PARSER_MAP
-} from './date_formats.js';
-import {applySpecifiers} from './printf_specs.js';
+    DATE_PARSER_MAP,
+} from './date_formats';
+import { applySpecifiers } from './printf_specs';
+
+const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 /**
  *
@@ -28,8 +30,8 @@ let activeLanguage = '';
 let fallbackLanguage = '';
 let active = null;
 
-const locs = {}; // Here we will keep i18n objects, each key is a language code
-const originalLocs = {}; // Here we will keep original localizations before using extendLanguage
+let locs = {}; // Here we will keep i18n objects, each key is a language code
+let originalLocs = {}; // Here we will keep original localizations before using extendLanguage
 
 /**
  * The default plural form specifier.
@@ -105,8 +107,10 @@ const i18n = {
         locs[langCode] = {
             code: langCode,
             data: data,
-            options: locOptions
+            options: locOptions,
         };
+
+        delete originalLocs[langCode];
 
         if (!activeLanguage) {
             activeLanguage = langCode;
@@ -114,6 +118,16 @@ const i18n = {
         }
 
         return this;
+    },
+
+    /**
+     * Remove all languages
+     */
+    reset: function () {
+        locs = {};
+        originalLocs = {};
+        activeLanguage = '';
+        active = null;
     },
 
     /**
@@ -231,7 +245,7 @@ const i18n = {
 
         // `while` because we might try multiple times,
         // like first try with active locale, second time with fallback locale.
-        while (true) {
+        while (true) { // eslint-disable-line no-constant-condition
 
             if (options && typeof options['count'] === 'number') { // Try for plural form
 
@@ -280,7 +294,7 @@ const i18n = {
 
                 tryFallback = false;
 
-                if (locs.hasOwnProperty(fallbackLanguage)) {
+                if (hasOwnProperty.call(locs, fallbackLanguage)) {
                     locale = locs[fallbackLanguage];
                     loc = locale.data;
                     continue;
@@ -434,7 +448,7 @@ const i18n = {
     getAvailableLanguages: function () {
         const langs = [];
         for (let key in locs) {
-            if (!locs.hasOwnProperty(key)) continue;
+            if (!hasOwnProperty.call(locs, key)) continue;
             langs.push(key);
         }
         return langs;
@@ -450,14 +464,12 @@ const i18n = {
      * @returns {i18n} self
      */
     extendLanguage: function (lang, data) {
-        try {
-            if (locs[lang]) {
-                if (!originalLocs[lang]) { // Back it up first
-                    originalLocs[lang] = JSON.parse(JSON.stringify(locs[lang]));
-                }
-                extendDotted(locs[lang].data, data);
+        if (locs[lang]) {
+            if (!originalLocs[lang]) { // Back it up first
+                originalLocs[lang] = JSON.parse(JSON.stringify(locs[lang]));
             }
-        } catch (e) { }
+            extendDotted(locs[lang].data, data);
+        }
         return this;
     },
 
@@ -468,17 +480,15 @@ const i18n = {
      * @returns {i18n} self
      */
     extendLanguages: function (data) {
-        try {
-            for (let lang in data) {
-                if (!data.hasOwnProperty(lang)) continue;
-                if (locs[lang]) {
-                    if (!originalLocs[lang]) { // Back it up first
-                        originalLocs[lang] = JSON.parse(JSON.stringify(locs[lang]));
-                    }
-                    extendDotted(locs[lang].data, data[lang]);
+        for (let lang in data) {
+            if (!hasOwnProperty.call(data, lang)) continue;
+            if (locs[lang]) {
+                if (!originalLocs[lang]) { // Back it up first
+                    originalLocs[lang] = JSON.parse(JSON.stringify(locs[lang]));
                 }
+                extendDotted(locs[lang].data, data[lang]);
             }
-        } catch (e) { }
+        }
         return this;
     },
 
@@ -491,11 +501,11 @@ const i18n = {
     physicalSize: function (bytes) {
         let ret;
         const loc = i18n.t('size_abbrs');
-        if (bytes < 100) ret = {size: bytes, name: loc['b']};
-        else if (bytes < 101376) ret = {size: bytes / 1024.0, name: loc['kb']};
-        else if (bytes < 103809024) ret = {size: bytes / 1024.0 / 1024.0, name: loc['mb']};
-        else if (bytes < 106300440576) ret = {size: bytes / 1024.0 / 1024.0 / 1024.0, name: loc['gb']};
-        else ret = {size: bytes / 1024.0 / 1024.0 / 1024.0 / 1024.0, name: loc['tb']};
+        if (bytes < 100) ret = { size: bytes, name: loc['b'] };
+        else if (bytes < 101376) ret = { size: bytes / 1024.0, name: loc['kb'] };
+        else if (bytes < 103809024) ret = { size: bytes / 1024.0 / 1024.0, name: loc['mb'] };
+        else if (bytes < 106300440576) ret = { size: bytes / 1024.0 / 1024.0 / 1024.0, name: loc['gb'] };
+        else ret = { size: bytes / 1024.0 / 1024.0 / 1024.0 / 1024.0, name: loc['tb'] };
         ret.size = (Math.ceil(ret.size * 100) / 100); // Max two decimal points
         return ret;
     },
@@ -560,7 +570,7 @@ const i18n = {
             DATE_FORMAT_REGEX,
                 token => (token in DATE_FLAG_MAP)
                     ? (DATE_FLAG_MAP[token])(date, f, culture)
-                    : token.slice(1, token.length - 1)
+                    : token.slice(1, token.length - 1),
         );
     },
 
@@ -653,19 +663,23 @@ const i18n = {
             // Go over all parts in the format, and create the parser regex part by part
             for (i = 0, count = formatParts.length; i < count; i++) {
                 part = formatParts[i];
+
                 if (part[0] === '[' && part[part.length - 1] === ']') {
+                    // optional part
                     regex += '(?:';
                     processFormat(part.substr(1, part.length - 2));
                     regex += ')?';
-                } else if (DATE_PARSER_MAP.hasOwnProperty(part)) {
+                }
+                else if (hasOwnProperty.call(DATE_PARSER_MAP, part)) {
                     // An actually recognized part
                     shouldStrict = strict || // We are specifically instructed to use strict mode
-                        (i > 0 && DATE_PARSER_MAP.hasOwnProperty(formatParts[i - 1])) || // Previous part is not some kind of a boundary
-                        (i < count - 1 && DATE_PARSER_MAP.hasOwnProperty(formatParts[i + 1])); // Next part is not some kind of a boundary
+                        (i > 0 && hasOwnProperty.call(DATE_PARSER_MAP, formatParts[i - 1])) || // Previous part is not some kind of a boundary
+                        (i < count - 1 && hasOwnProperty.call(DATE_PARSER_MAP, formatParts[i + 1])); // Next part is not some kind of a boundary
 
                     regex += '(' + DATE_PARSER_MAP[part](culture, shouldStrict) + ')';
                     regexParts.push(part);
-                } else {
+                }
+                else {
                     // A free text node
 
                     // Remove enclosing quotes if there are...
@@ -827,7 +841,7 @@ const i18n = {
 
                     case 'Z':
                     case 'UTC':
-                    case 'o':
+                    case 'o': {
                         const tz = part.match(/(Z)|(?:GMT|UTC)?([+-][0-9]{2,4})(?:\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\))?/);
                         if (tz[1] === 'Z') {
                             timezone = 0;
@@ -838,6 +852,7 @@ const i18n = {
                             }
                         }
                         break;
+                    }
                 }
             }
 
@@ -966,7 +981,7 @@ const i18n = {
                     if (dec) return '.';
                     if (tho) return thousands ? '' : ',';
                     return g0;
-                })
+                }),
             );
         }
 
@@ -1016,7 +1031,7 @@ const i18n = {
      * +            : Forces to precede the result with a plus or minus sign (+ or -) even for positive numbers.
      * (space)      : If no sign is going to be written, a blank space is inserted before the value.
      * #            : For o, x or X specifiers the value is prefixed with 0, 0x or 0X respectively for values different than zero.
-     *                For with e, E, f, g it forces the written output to contain a decimal point even if no more digits follow
+     *                For e, E, f, g it forces the written output to contain a decimal point even if no more digits follow
      * 0            : Left-pads the number with zeroes (0) instead of spaces when padding is specified
      * (width)      : Minimum number of characters to be printed, left-padded with spaces or zeroes.
      *                If shorter than the number, then the number is not truncated.
@@ -1034,7 +1049,7 @@ const i18n = {
 
         if (typeof value !== 'string') return value;
 
-        value = value.replace(/(\\*)(\{{1,2})([^|{}"]+)((?:\|[^|{}]+)*?)(}{1,2})/g, function () {
+        value = value.replace(/(\\*)({{1,2})([^|{}"]+)((?:\|[^|{}]+)*?)(}{1,2})/g, function () {
 
             const precedingBackslahes = arguments[1];
             const openingBrackets = arguments[2];
@@ -1055,7 +1070,7 @@ const i18n = {
             let filters = arguments[4];
             if (filters) {
                 filters = filters.length > 0 ? filters.split('|') : EMPTY_ARRAY;
-                
+
                 // Remove first | split (always empty) so gender could be quickly matched
                 while (filters[0] === '')
                     filters.shift();
@@ -1112,7 +1127,7 @@ const i18n = {
                 '') + value;
         });
 
-        value = value.replace(/t\(("[^"]+?"|'[^']+?'|[^,)]+?)(?:,\s*(\{.*?}))?\)/g, function () {
+        value = value.replace(/t\(("[^"]+?"|'[^']+?'|[^,)]+?)(?:,\s*({.*?}))?\)/g, function () {
 
             let key = arguments[1],
                 options = arguments[2];
@@ -1135,7 +1150,7 @@ const i18n = {
 
         return value;
 
-    }
+    },
 
 };
 
@@ -1163,3 +1178,4 @@ const i18n = {
 /** */
 
 export default i18n;
+export const t = i18n.t;

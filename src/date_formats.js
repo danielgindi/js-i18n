@@ -1,5 +1,5 @@
-import {generateAllCasePermutations} from './string_case_permutations.js';
-import {padLeft, arrayToRegex} from './utils.js';
+import { generateAllCasePermutations } from './string_case_permutations';
+import { padLeft, arrayToRegex } from './utils';
 
 const DATE_FORMAT_REGEX = /d{1,4}|M{1,4}|yy(?:yy)?|([HhmsTt])\1?|[LloSZ]|UTC|('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])/g;
 const DATE_TIMEZONE_REGEX = /\b(?:[PMCEA][SDP]T|[a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)?(?:[-+]\d{4})?)\b/g;
@@ -26,7 +26,7 @@ const DATE_FLAG_SUBMAP_LOCAL = {
     /** @param {Date} d */
     /** @returns {number} */ 'L': d => d.getMilliseconds(),
     /** @param {Date} d */
-    /** @returns {number} */ 'o': d => 0,
+    /** @returns {number} */ 'o': () => 0,
     /** @param {Date} d */
     /** @returns {string} */ 'utcd': d => ((d + '').match(DATE_TIMEZONE_REGEX) || ['']).pop().replace(DATE_TIMEZONE_CLIP_REGEX, ''),
     /** @param {Date} d */
@@ -36,7 +36,7 @@ const DATE_FLAG_SUBMAP_LOCAL = {
         z = z < 0 ? -z : z;
         const zm = z % 60;
         return s + padLeft((z - zm) / 60, 2, '0') + (zm ? padLeft(zm, 2, '0') : '');
-    }
+    },
 };
 
 /** @type {FlagMap} */
@@ -51,7 +51,7 @@ const DATE_FLAG_SUBMAP_UTC = {
     /** @param {Date} d */ /** @returns {number} */ 'L': d => d.getUTCMilliseconds(),
     /** @param {Date} d */ /** @returns {number} */ 'o': d => d.getTimezoneOffset(),
     /** @param {Date} d */ /** @returns {string} */ 'utcd': () => "UTC",
-    /** @param {Date} d */ /** @returns {string} */ 'utc': () => "Z"
+    /** @param {Date} d */ /** @returns {string} */ 'utc': () => "Z",
 };
 
 const DATE_FLAG_MAP = {
@@ -213,14 +213,14 @@ const DATE_FLAG_MAP = {
     /** @param {FlagMap} fmap */ /** @return {string} */
     'o': (o, fmap) => {
         o = fmap.o(o);
-        return (o > 0 ? "-" : "+") + padLeft(Math.floor(Math.abs(o) / 60) * 100 + Math.abs(o) % 60, 4, '0')
+        return (o > 0 ? "-" : "+") + padLeft(Math.floor(Math.abs(o) / 60) * 100 + Math.abs(o) % 60, 4, '0');
     },
 
     /** @param {FlagMap} fmap */ /** @return {string} */
     'S': (o, fmap) => {
         const d = /**@type number*/fmap.d(o);
-        return ["th", "st", "nd", "rd"][d % 10 > 3 ? 0 : (d % 100 - d % 10 !== 10) * d % 10]
-    }
+        return ["th", "st", "nd", "rd"][d % 10 > 3 ? 0 : (d % 100 - d % 10 !== 10) * d % 10];
+    },
 };
 
 const DATE_PARSER_FORMAT_REGEX = /('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])|yyyy|yy|MMMM|MMM|MM|M|dddd|ddd|dd|d|HH|H|hh|h|mm|m|ss|s|l|L|f|ff|fff|ffff|fffff|ffffff|fffffff|F|FF|FFF|FFFF|FFFFF|FFFFFF|FFFFFFF|tt|t|TT|T|Z|UTC|o|S|.+?/g;
@@ -303,7 +303,7 @@ const DATE_PARSER_MAP = {
     'Z': () => 'Z|(?:GMT|UTC)?[+-][0-9]{2,4}(?:\\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\\))?',
     'UTC': () => '[+-][0-9]{2,4}',
     'o': () => '[+-][0-9]{4}',
-    'S': () => 'th|st|nd|rd'
+    'S': () => 'th|st|nd|rd',
 };
 
 export {
@@ -312,5 +312,5 @@ export {
     DATE_FLAG_SUBMAP_UTC,
     DATE_FLAG_MAP,
     DATE_PARSER_FORMAT_REGEX,
-    DATE_PARSER_MAP
+    DATE_PARSER_MAP,
 };

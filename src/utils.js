@@ -1,9 +1,11 @@
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+
 // Helper function to extend an object using a synthetic object structure from dotted syntax to a real nested structure.
 function extendDotted(target, data) {
     if (data == null) return;
     let dotted, targetDotted, i;
     for (let key in data) {
-        if (!data.hasOwnProperty(key) || !data[key]) continue;
+        if (!hasOwnProperty.call(data, key) || !data[key]) continue;
         dotted = key.split('.');
         targetDotted = target;
         for (i = 0; i < dotted.length - 1; i++) {
@@ -13,7 +15,7 @@ function extendDotted(target, data) {
     }
 }
 
-const ESCAPE_REGEX = /([\/()[\]?{}|*+-\\:])/g;
+const ESCAPE_REGEX = /([/()[\]?{}|*+-\\:])/g;
 
 function regexEscape(string) {
     return string.replace(ESCAPE_REGEX, '\\$1');
@@ -42,4 +44,4 @@ function padLeft(value, length, ch) {
     return value;
 }
 
-export {extendDotted, regexEscape, arrayToRegex, padLeft};
+export { extendDotted, regexEscape, arrayToRegex, padLeft };

@@ -42,4 +42,4 @@ function generateAllCasePermutations(text) {
     return results;
 }
 
-export {generateAllCasePermutations};
+export { generateAllCasePermutations };

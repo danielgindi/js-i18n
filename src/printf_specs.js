@@ -1,4 +1,4 @@
-import {padLeft} from './utils.js';
+import { padLeft } from './utils';
 
 const DEFAULT_DECIMAL_SEPARATOR = (1.1).toLocaleString().substr(1, 1);
 
@@ -99,14 +99,11 @@ function applySpecifiers(value, specifiers, decimalSign, thousandsSign) {
         value = (/**@type number*/value).toString(16);
     } else if (type === 's') {
         value = value.toString();
-        if (precision !== undefined) {
-            value.substr(0, precision);
-        }
     } else {
         value = value.toString();
     }
 
-    if (type === 'd' || type === 'i' || type === 'u' || type === 'x' || type === 'x' || type === 'X' || type === 'o') {
+    if (type === 'd' || type === 'i' || type === 'u' || type === 'x' || type === 'X' || type === 'o') {
         if (precision !== undefined) {
             if (precision === 0 && value === '0') {
                 value = '';
@@ -173,14 +170,14 @@ function applySpecifiers(value, specifiers, decimalSign, thousandsSign) {
         }
 
         // Zero padding - should be like "0x00005" for length of 7, where the radii sign is before padding
-        if (padCount && padZero) {
+        if (padCount > 0 && padZero) {
             value = padLeft(value, padCount - sign.length - radiiSign.length, '0');
         }
 
         value = sign + radiiSign + value;
 
         // Space padding - should be like "    0x5" for length of 7, where the radii sign is after padding
-        if (padCount && !padZero) {
+        if (padCount > 0 && !padZero) {
             value = padLeft(value, padCount, ' ');
         }
     }
@@ -188,4 +185,4 @@ function applySpecifiers(value, specifiers, decimalSign, thousandsSign) {
     return value;
 }
 
-export {applySpecifiers};
+export { applySpecifiers };
