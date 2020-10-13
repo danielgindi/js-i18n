@@ -1049,11 +1049,18 @@ const i18n = {
 
         if (typeof value !== 'string') return value;
 
-        value = value.replace(/(\\*)({{1,2})([^|{}"]+)((?:\|[^|{}]+)*?)(}{1,2})/g, function () {
+        value = value.replace(/(\\*)({{1,2})((?:[^|{}]|(?<!\\)(?:\\\\)*[^|{}])+)((?:\|[^|{}]+)*?)((?<!\\)(?:\\\\)*}{1,2})/g, function () {
 
             const precedingBackslahes = arguments[1];
             const openingBrackets = arguments[2];
-            const closingBrackets = arguments[5];
+            let closingBrackets = arguments[5];
+            let key = arguments[3];
+
+            let escPos = closingBrackets.lastIndexOf('\\');
+            if (escPos !== -1) {
+                key += closingBrackets.substr(0, (escPos + 1) / 2);
+                closingBrackets = closingBrackets.substr(escPos + 1);
+            }
 
             if ((precedingBackslahes.length & 1) === 1) {
                 return arguments[0].substr(precedingBackslahes.length - (precedingBackslahes.length - 1) / 2);
@@ -1064,7 +1071,6 @@ const i18n = {
             }
 
             let value;
-            const key = arguments[3];
             let i, len;
 
             let filters = arguments[4];

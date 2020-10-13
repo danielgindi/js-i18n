@@ -122,4 +122,27 @@ describe('complex', () => {
         i18n.add('en', { 'foo': 'bar {{v}}', 'complex': 'foo t("foo", {"v": {{value|json}}}) end' });
         expect(t('complex', { value: 5 })).to.equal('foo bar 5 end');
     });
+
+    it('returns value from escaped key', () => {
+        i18n.add('en', { 'foo"bar': 'bar', 'complex': 'foo {foo"bar} end' });
+        expect(t('complex')).to.equal('foo bar end');
+
+        i18n.add('en', { 'foo{bar': 'bar', 'complex': 'foo {foo\\{bar} end' });
+        expect(t('complex')).to.equal('foo bar end');
+
+        i18n.add('en', { 'foo}bar': 'bar', 'complex': 'foo {foo\\}bar} end' });
+        expect(t('complex')).to.equal('foo bar end');
+
+        i18n.add('en', { 'foo{abc}bar': 'bar', 'complex': 'foo {foo\\{abc\\}bar} end' });
+        expect(t('complex')).to.equal('foo bar end');
+
+        i18n.add('en', { 'foo{abc}|bar': 'bar', 'complex': 'foo {foo\\{abc\\}\\|bar} end' });
+        expect(t('complex')).to.equal('foo bar end');
+
+        i18n.add('en', { 'foo{abc}|bar\\': 'bar', 'complex': 'foo {foo\\{abc\\}\\|bar\\\\} end' });
+        expect(t('complex')).to.equal('foo bar end');
+
+        i18n.add('en', { 'foo{abc}|bar}': 'bar', 'complex': 'foo {foo\\{abc\\}\\|bar\\}} end' });
+        expect(t('complex')).to.equal('foo bar end');
+    });
 });
