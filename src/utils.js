@@ -46,7 +46,7 @@ function padLeft(value, length, ch) {
 
 function supportsRegexLookbehind() {
     try {
-        return '-'.replace(/(?<!\\)-/gi, '=') === '=';
+        return '-'.replace(new RegExp('(?<!\\\\)-', 'gi'), '=') === '=';
     } catch (err) {
         // ignored
     }
