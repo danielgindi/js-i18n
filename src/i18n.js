@@ -1,6 +1,6 @@
 'use strict';
 
-import { extendDotted, regexEscape } from './utils';
+import { extendDotted, regexEscape, supportsRegexLookbehind } from './utils';
 import {
     DATE_FORMAT_REGEX,
     DATE_FLAG_SUBMAP_LOCAL,
@@ -81,6 +81,14 @@ const encodeValue = function (value, encoding) {
 
     return value;
 };
+
+const BASE_REGEX = (() => {
+    if (supportsRegexLookbehind()) {
+        return /(\\*)({{1,2})((?:[^|{}]|(?<!\\)(?:\\\\)*[^|{}])+)((?:\|[^|{}]+)*?)((?<!\\)(?:\\\\)*}{1,2})/g;
+    } else {
+        return /(\\*)({{1,2})([^|{}"]+)((?:\|[^|{}]+)*?)(}{1,2})/g;
+    }
+})();
 
 /** @typedef i18n */
 const i18n = {
@@ -1049,7 +1057,7 @@ const i18n = {
 
         if (typeof value !== 'string') return value;
 
-        value = value.replace(/(\\*)({{1,2})((?:[^|{}]|(?<!\\)(?:\\\\)*[^|{}])+)((?:\|[^|{}]+)*?)((?<!\\)(?:\\\\)*}{1,2})/g, function () {
+        value = value.replace(BASE_REGEX, function () {
 
             const precedingBackslahes = arguments[1];
             const openingBrackets = arguments[2];

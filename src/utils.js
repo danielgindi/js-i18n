@@ -44,4 +44,13 @@ function padLeft(value, length, ch) {
     return value;
 }
 
-export { extendDotted, regexEscape, arrayToRegex, padLeft };
+function supportsRegexLookbehind() {
+    try {
+        return '-'.replace(/(?<!\\)-/gi, '=') === '=';
+    } catch (err) {
+        // ignored
+    }
+    return false;
+}
+
+export { extendDotted, regexEscape, arrayToRegex, padLeft, supportsRegexLookbehind };
