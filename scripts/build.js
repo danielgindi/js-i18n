@@ -13,7 +13,6 @@ const Path = require('path');
         dest: 'dist/i18n.es6.js',
         sourceMap: true,
         outputFormat: 'esm',
-        outputExports: 'auto',
         babelTargets: {
             node: 10,
         },
@@ -23,7 +22,6 @@ const Path = require('path');
         dest: 'dist/i18n.es6.min.js',
         sourceMap: true,
         outputFormat: 'esm',
-        outputExports: 'auto',
         babelTargets: {
             node: 10,
         },
@@ -33,7 +31,6 @@ const Path = require('path');
         dest: 'dist/i18n.umd.js',
         sourceMap: true,
         outputFormat: 'umd',
-        outputExports: 'auto',
         babelTargets: '> 0.25%, not dead',
         minified: false,
         ecmaVersion: 6,
@@ -42,7 +39,6 @@ const Path = require('path');
         dest: 'dist/i18n.umd.min.js',
         sourceMap: true,
         outputFormat: 'umd',
-        outputExports: 'auto',
         babelTargets: '> 0.25%, not dead',
         minified: true,
         ecmaVersion: 6,
