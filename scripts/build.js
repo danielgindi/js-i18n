@@ -30,39 +30,59 @@ const Path = require('path');
     }, {
         dest: 'dist/i18n.umd.js',
         sourceMap: true,
-        outputFormat: 'umd',
+        outputFormat: 'default',
         babelTargets: '> 0.25%, not dead',
         minified: false,
         ecmaVersion: 6,
         outputName: 'i18n',
+        plugins: [
+            require('@rollup/plugin-replace')({
+                'export const t = i18n.t': '',
+            }),
+        ],
     }, {
         dest: 'dist/i18n.umd.min.js',
         sourceMap: true,
-        outputFormat: 'umd',
+        outputFormat: 'default',
         babelTargets: '> 0.25%, not dead',
         minified: true,
         ecmaVersion: 6,
         outputName: 'i18n',
+        plugins: [
+            require('@rollup/plugin-replace')({
+                'export const t = i18n.t': '',
+            }),
+        ],
     }, {
         dest: 'dist/i18n.cjs.js',
         sourceMap: true,
         outputFormat: 'cjs',
-        outputExports: 'auto',
+        outputExports: 'default',
         babelTargets: {
             node: 10,
         },
         minified: false,
         ecmaVersion: 6,
+        plugins: [
+            require('@rollup/plugin-replace')({
+                'export const t = i18n.t': '',
+            }),
+        ],
     }, {
         dest: 'dist/i18n.cjs.min.js',
         sourceMap: true,
         outputFormat: 'cjs',
-        outputExports: 'auto',
+        outputExports: 'default',
         babelTargets: {
             node: 10,
         },
         minified: true,
         ecmaVersion: 6,
+        plugins: [
+            require('@rollup/plugin-replace')({
+                'export const t = i18n.t': '',
+            }),
+        ],
     }];
 
     const inputFile = 'src/i18n.js';
@@ -71,11 +91,13 @@ const Path = require('path');
         console.info('Generating ' + task.dest + '...');
 
         let plugins = [
-            require('rollup-plugin-node-resolve')({
+            require('@rollup/plugin-node-resolve').nodeResolve({
                 mainFields: ['module', 'main'],
             }),
-            require('rollup-plugin-commonjs')({}),
+            require('@rollup/plugin-commonjs')({}),
         ];
+
+        plugins = plugins.concat(task.plugins || []);
 
         const pkg = require('../package.json');
         const banner = [
@@ -86,7 +108,7 @@ const Path = require('path');
         ].join('\n');
 
         if (task.babelTargets) {
-            plugins.push(require('rollup-plugin-babel')({
+            plugins.push(require('@rollup/plugin-babel').babel({
                 sourceMap: task.sourceMap ? true : false,
                 presets: [
                     ['@babel/env', {
@@ -99,6 +121,7 @@ const Path = require('path');
                 minified: false,
                 comments: true,
                 retainLines: true,
+                babelHelpers: 'bundled',
                 exclude: 'node_modules/**/core-js/**/*',
             }));
         }
