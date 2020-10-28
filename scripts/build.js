@@ -30,7 +30,8 @@ const Path = require('path');
     }, {
         dest: 'dist/i18n.umd.js',
         sourceMap: true,
-        outputFormat: 'default',
+        outputFormat: 'umd',
+        outputExports: 'default',
         babelTargets: '> 0.25%, not dead',
         minified: false,
         ecmaVersion: 6,
@@ -43,7 +44,8 @@ const Path = require('path');
     }, {
         dest: 'dist/i18n.umd.min.js',
         sourceMap: true,
-        outputFormat: 'default',
+        outputFormat: 'umd',
+        outputExports: 'default',
         babelTargets: '> 0.25%, not dead',
         minified: true,
         ecmaVersion: 6,
