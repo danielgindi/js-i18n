@@ -48,8 +48,9 @@ function applySpecifiers(value, specifiers, decimalSign, thousandsSign) {
 
     if (isNumeric) {
         if (typeof value !== 'number') {
-            value = parseInt(value, 10);
+            value = isDecimalNumeric ? parseFloat(value) : parseInt(value, 10);
         }
+
         if (type === 'u') {
             value = value >>> 0;
         }
