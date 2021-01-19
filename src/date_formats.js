@@ -1,7 +1,7 @@
 import { generateAllCasePermutations } from './string_case_permutations';
 import { padLeft, arrayToRegex } from './utils';
 
-const DATE_FORMAT_REGEX = /d{1,4}|M{1,4}|yy(?:yy)?|([HhmsTt])\1?|[LloSZ]|UTC|('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])/g;
+const DATE_FORMAT_REGEX = /[dM]{1,4}|yy(?:yy)?|([HhmsTt])\1?|[LloSZ]|[fF]{1,6}|UTC|('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])/g;
 const DATE_TIMEZONE_REGEX = /\b(?:[PMCEA][SDP]T|[a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)?(?:[-+]\d{4})?)\b/g;
 const DATE_TIMEZONE_CLIP_REGEX = /[^-+\dA-Z]/g;
 
@@ -223,7 +223,7 @@ const DATE_FLAG_MAP = {
     },
 };
 
-const DATE_PARSER_FORMAT_REGEX = /('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])|yyyy|yy|MMMM|MMM|MM|M|dddd|ddd|dd|d|HH|H|hh|h|mm|m|ss|s|l|L|f|ff|fff|ffff|fffff|ffffff|fffffff|F|FF|FFF|FFFF|FFFFF|FFFFFF|FFFFFFF|tt|t|TT|T|Z|UTC|o|S|.+?/g;
+const DATE_PARSER_FORMAT_REGEX = /('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])|yy(?:yy)?|[dM]{1,4}|[HhmsTt]{1,2}|[LloSZ]|[fF]{1,6}|UTC|.+?/g;
 
 const DATE_PARSER_MAP = {
     'yyyy': (c, s) => s ? '[0-9]{4}' : '[0-9]{2}|[0-9]{4}',

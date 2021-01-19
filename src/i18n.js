@@ -735,7 +735,7 @@ const i18n = {
             let part, tmp;
             for (; i < len; i++) {
                 part = parts[i];
-                switch (regexParts[i]) {
+                switch (part !== undefined && regexParts[i].length > 0) {
                     case 'yyyy':
                     case 'yy':
                         year = parseInt(part, 10);
