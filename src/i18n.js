@@ -615,7 +615,7 @@ const i18n = {
             if ('parse' in Date) {
                 return new Date(date);
             } else {
-                let parsed = this.parseDate(date, 'yyyy-MM-dd\'T\'HH:mm:ss[.FFFFFFF]Z', culture, true);
+                let parsed = this.parseDate(date, 'yyyy-MM-dd\'T\'HH:mm:ss.FFFFFFFZ', culture, true);
                 if (isNaN(+parsed)) parsed = this.parseDate(date, 'yyyy-MM-dd', culture, true);
                 if (isNaN(+parsed)) parsed = this.parseDate(date, 'ddd, dd, MMM yyyy HH:mm:ss Z', culture, true);
                 if (isNaN(+parsed)) parsed = this.parseDate(date, 'dddd, dd-MMM-yy HH:mm:ss Z', culture, true);
@@ -684,7 +684,14 @@ const i18n = {
                         (i > 0 && hasOwnProperty.call(DATE_PARSER_MAP, formatParts[i - 1])) || // Previous part is not some kind of a boundary
                         (i < count - 1 && hasOwnProperty.call(DATE_PARSER_MAP, formatParts[i + 1])); // Next part is not some kind of a boundary
 
-                    regex += '(' + DATE_PARSER_MAP[part](culture, shouldStrict) + ')';
+                    let parserOption = DATE_PARSER_MAP[part](culture, shouldStrict);
+                    let isRaw = false;
+                    if (Array.isArray(parserOption)) {
+                        parserOption = parserOption[0];
+                        isRaw = !!parserOption[1];
+                    }
+
+                    regex += isRaw ? parserOption : ('(' + parserOption + ')');
                     regexParts.push(part);
                 }
                 else {
@@ -830,6 +837,13 @@ const i18n = {
                     case 'FFFFF':
                     case 'FFFFFF':
                     case 'FFFFFFF':
+                    case '.F':
+                    case '.FF':
+                    case '.FFF':
+                    case '.FFFF':
+                    case '.FFFFF':
+                    case '.FFFFFF':
+                    case '.FFFFFFF':
                         if (part.length > 3) {
                             part = part.substr(0, 3) + '.' + part.substr(3);
                         } else if (part.length < 3) {
@@ -852,11 +866,34 @@ const i18n = {
                     case 'Z':
                     case 'UTC':
                     case 'o': {
-                        const tz = part.match(/(Z)|(?:GMT|UTC)?([+-][0-9]{2,4})(?:\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\))?/);
+                        const tz = part.match(/(Z)|(?:GMT|UTC)?([+-][0-9]{2}(?::?[0-9]{2}))(?:\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\))?/);
                         if (tz[1] === 'Z') {
                             timezone = 0;
                         } else if (tz[2]) {
-                            timezone = (parseInt(tz[2].substr(1, 2), 10) || 0) * 60 + (parseInt(tz[2].substr(3), 10) || 0);
+                            let z1 = tz[2].substr(1, 2);
+                            let z2 = tz[2].substr(3);
+                            if (z2[0] === ':')
+                                z2 = z2.substr(1);
+
+                            timezone = (parseInt(z1, 10) || 0) * 60 + (parseInt(z2, 10) || 0);
+                            if (tz[2].charAt(0) === '-') {
+                                timezone = -timezone;
+                            }
+                        }
+                        break;
+                    }
+                    
+                    case 'K': {
+                        const tz = part.match(/(Z)|([+-][0-9]{2}(?::[0-9]{2}))|/);
+                        if (tz[1] === 'Z') {
+                            timezone = 0;
+                        } else if (tz[2]) {
+                            let z1 = tz[2].substr(1, 2);
+                            let z2 = tz[2].substr(3);
+                            if (z2[0] === ':')
+                                z2 = z2.substr(1);
+
+                            timezone = (parseInt(z1, 10) || 0) * 60 + (parseInt(z2, 10) || 0);
                             if (tz[2].charAt(0) === '-') {
                                 timezone = -timezone;
                             }

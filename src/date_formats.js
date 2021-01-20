@@ -35,7 +35,7 @@ const DATE_FLAG_SUBMAP_LOCAL = {
         const s = (z > 0 ? '-' : '+');
         z = z < 0 ? -z : z;
         const zm = z % 60;
-        return s + padLeft((z - zm) / 60, 2, '0') + (zm ? padLeft(zm, 2, '0') : '');
+        return s + padLeft((z - zm) / 60, 2, '0') + ':' + (zm ? padLeft(zm, 2, '0') : '');
     },
 };
 
@@ -223,7 +223,7 @@ const DATE_FLAG_MAP = {
     },
 };
 
-const DATE_PARSER_FORMAT_REGEX = /('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])|yy(?:yy)?|[dM]{1,4}|[HhmsTt]{1,2}|[LloSZ]|[fF]{1,7}|UTC|.+?/g;
+const DATE_PARSER_FORMAT_REGEX = /('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])|yy(?:yy)?|[dM]{1,4}|[HhmsTt]{1,2}|[LloSZ]|f{1,7}|\.?F{1,7}|UTC|.+?/g;
 
 const DATE_PARSER_MAP = {
     'yyyy': (c, s) => s ? '[0-9]{4}' : '[0-9]{2}|[0-9]{4}',
@@ -260,6 +260,13 @@ const DATE_PARSER_MAP = {
     'FFFFF': () => '[0-9]{0,5}',
     'FFFFFF': () => '[0-9]{0,6}',
     'FFFFFFF': () => '[0-9]{0,7}',
+    '.F': () => ['(?:\\.([0-9]{0,1}))?', true],
+    '.FF': () => ['(?:\\.([0-9]{0,2}))?', true],
+    '.FFF': () => ['(?:\\.([0-9]{0,3}))?', true],
+    '.FFFF': () => ['(?:\\.([0-9]{0,4}))?', true],
+    '.FFFFF': () => ['(?:\\.([0-9]{0,5}))?', true],
+    '.FFFFFF': () => ['(?:\\.([0-9]{0,6}))?', true],
+    '.FFFFFFF': () => ['(?:\\.([0-9]{0,7}))?', true],
     'tt': (c) => {
         const am1 = c['am_lower'] || 'am';
         const pm1 = c['pm_lower'] || 'pm';
@@ -300,7 +307,7 @@ const DATE_PARSER_MAP = {
     },
     'TT': (c, s) => DATE_PARSER_MAP['tt'](c, s),
     'T': (c, s) => DATE_PARSER_MAP['t'](c, s),
-    'Z': () => 'Z|(?:GMT|UTC)?[+-][0-9]{2,4}(?:\\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\\))?',
+    'Z': () => 'Z|(?:GMT|UTC)?[+-][0-9]{2}(?:\\:?[0-9]{2})(?:\\([a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time\\))?',
     'UTC': () => '[+-][0-9]{2,4}',
     'o': () => '[+-][0-9]{4}',
     'S': () => 'th|st|nd|rd',
