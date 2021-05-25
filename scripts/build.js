@@ -38,7 +38,10 @@ const Path = require('path');
         outputName: 'i18n',
         plugins: [
             require('@rollup/plugin-replace')({
-                'export const t = i18n.t': '',
+                preventAssignment: false,
+                values: {
+                    'export const t = i18n.t': '',
+                },
             }),
         ],
     }, {
@@ -52,7 +55,10 @@ const Path = require('path');
         outputName: 'i18n',
         plugins: [
             require('@rollup/plugin-replace')({
-                'export const t = i18n.t': '',
+                preventAssignment: false,
+                values: {
+                    'export const t = i18n.t': '',
+                },
             }),
         ],
     }, {
@@ -67,7 +73,10 @@ const Path = require('path');
         ecmaVersion: 6,
         plugins: [
             require('@rollup/plugin-replace')({
-                'export const t = i18n.t': '',
+                preventAssignment: false,
+                values: {
+                    'export const t = i18n.t': '',
+                },
             }),
         ],
     }, {
@@ -82,7 +91,10 @@ const Path = require('path');
         ecmaVersion: 6,
         plugins: [
             require('@rollup/plugin-replace')({
-                'export const t = i18n.t': '',
+                preventAssignment: false,
+                values: {
+                    'export const t = i18n.t': '',
+                },
             }),
         ],
     }];
