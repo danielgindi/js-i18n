@@ -51,7 +51,7 @@ const defaultPlural = function (count) {
  * @param {string} encoding for filters
  * @returns {*}
  */
-const encodeValue = function (value, encoding) {
+const filterValue = function (value, encoding) {
     if (encoding === 'html') {
         value = (value == null ? '' : (value + '')).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#39;").replace(/"/g, "&quot;");
     }
@@ -111,6 +111,7 @@ const i18n = {
         locOptions.decimalOrThousandsRegex = new RegExp(
             '(' + regexEscape(locOptions.decimal) +
             ')|(' + regexEscape(locOptions.thousands) + ')', 'g');
+        locOptions.filter = options.filter;
 
         locs[langCode] = {
             code: langCode,
@@ -743,7 +744,7 @@ const i18n = {
             for (; i < len; i++) {
                 part = parts[i];
                 if (part === undefined) continue;
-                
+
                 switch (regexParts[i]) {
                     case 'yyyy':
                     case 'yy':
@@ -882,7 +883,7 @@ const i18n = {
                         }
                         break;
                     }
-                    
+
                     case 'K': {
                         const tz = part.match(/(Z)|([+-][0-9]{2}(?::[0-9]{2}))|/);
                         if (tz[1] === 'Z') {
@@ -1168,7 +1169,11 @@ const i18n = {
 
             for (i = 0, len = filters.length; i < len; i++) {
                 if (filters[i].length === 0) continue;
-                value = encodeValue(value, filters[i]);
+                if (typeof active.options.filter === 'function') {
+                    value = active.options.filter(value, filters[i], filterValue);
+                } else {
+                    value = filterValue(value, filters[i]);
+                }
             }
 
             if (closingBrackets.length > openingBrackets.length) {
@@ -1227,6 +1232,7 @@ const i18n = {
  * @property {PluralFormFunction} plural - function that takes a number, and returns a key suffix for plural form of that count.
  * @property {string} [decimal='.'] - decimal separator character. The default is auto-detected from the browser locale
  * @property {string} [thousands=','] - thousands separator character. The default is auto-detected from the browser locale
+ * @property {function(value: *, encoding: string, defaultEncoder: function):*} [filter] - encoder override for values, all filters will go through here
  * */
 /** */
 
