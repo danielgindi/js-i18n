@@ -1,7 +1,7 @@
 import { generateAllCasePermutations } from './string_case_permutations';
 import { padLeft, arrayToRegex } from './utils';
 
-const DATE_FORMAT_REGEX = /d{1,4}|M{1,4}|yy(?:yy)?|([HhmsTt])\1?|[LloSZ]|f{1,7}|F{1,7}|UTC|('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])/g;
+const DATE_FORMAT_REGEX = /d{1,4}|M{1,4}|yy(?:yy)?|([HhmsTt])\1?|[LloSZq]|f{1,7}|F{1,7}|UTC|('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])/g;
 const DATE_TIMEZONE_REGEX = /\b(?:[PMCEA][SDP]T|[a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)?(?:[-+]\d{4})?)\b/g;
 const DATE_TIMEZONE_CLIP_REGEX = /[^-+\dA-Z]/g;
 
@@ -9,24 +9,15 @@ const DATE_TIMEZONE_CLIP_REGEX = /[^-+\dA-Z]/g;
 
 /** @type {FlagMap} */
 const DATE_FLAG_SUBMAP_LOCAL = {
-    /** @param {Date} d */
-    /** @returns {number} */ 'd': d => d.getDate(),
-    /** @param {Date} d */
-    /** @returns {number} */ 'D': d => d.getDay(),
-    /** @param {Date} d */
-    /** @returns {number} */ 'M': d => d.getMonth(),
-    /** @param {Date} d */
-    /** @returns {number} */ 'y': d => d.getFullYear(),
-    /** @param {Date} d */
-    /** @returns {number} */ 'H': d => d.getHours(),
-    /** @param {Date} d */
-    /** @returns {number} */ 'm': d => d.getMinutes(),
-    /** @param {Date} d */
-    /** @returns {number} */ 's': d => d.getSeconds(),
-    /** @param {Date} d */
-    /** @returns {number} */ 'L': d => d.getMilliseconds(),
-    /** @param {Date} d */
-    /** @returns {number} */ 'o': () => 0,
+    /** @param {Date} d */ /** @returns {number} */ 'd': d => d.getDate(),
+    /** @param {Date} d */ /** @returns {number} */ 'D': d => d.getDay(),
+    /** @param {Date} d */ /** @returns {number} */ 'M': d => d.getMonth(),
+    /** @param {Date} d */ /** @returns {number} */ 'y': d => d.getFullYear(),
+    /** @param {Date} d */ /** @returns {number} */ 'H': d => d.getHours(),
+    /** @param {Date} d */ /** @returns {number} */ 'm': d => d.getMinutes(),
+    /** @param {Date} d */ /** @returns {number} */ 's': d => d.getSeconds(),
+    /** @param {Date} d */ /** @returns {number} */ 'L': d => d.getMilliseconds(),
+    /** @param {Date} d */ /** @returns {number} */ 'o': () => 0,
     /** @param {Date} d */
     /** @returns {string} */ 'utcd': d => ((d + '').match(DATE_TIMEZONE_REGEX) || ['']).pop().replace(DATE_TIMEZONE_CLIP_REGEX, ''),
     /** @param {Date} d */
@@ -36,6 +27,14 @@ const DATE_FLAG_SUBMAP_LOCAL = {
         z = z < 0 ? -z : z;
         const zm = z % 60;
         return s + padLeft((z - zm) / 60, 2, '0') + ':' + (zm ? padLeft(zm, 2, '0') : '');
+    },
+    /** @param {Date} d */
+    /** @returns {number} */ 'q': d => {
+        const m = d.getMonth();
+        if (m < 3) return 1;
+        if (m < 6) return 2;
+        if (m < 9) return 3;
+        return 4;
     },
 };
 
@@ -52,6 +51,13 @@ const DATE_FLAG_SUBMAP_UTC = {
     /** @param {Date} d */ /** @returns {number} */ 'o': d => d.getTimezoneOffset(),
     /** @param {Date} d */ /** @returns {string} */ 'utcd': () => "UTC",
     /** @param {Date} d */ /** @returns {string} */ 'utc': () => "Z",
+    /** @param {Date} d */ /** @returns {number} */ 'q': d => {
+        const m = d.getUTCMonth();
+        if (m < 3) return 1;
+        if (m < 6) return 2;
+        if (m < 9) return 3;
+        return 4;
+    },
 };
 
 const DATE_FLAG_MAP = {
@@ -221,6 +227,11 @@ const DATE_FLAG_MAP = {
         const d = /**@type number*/fmap.d(o);
         return ["th", "st", "nd", "rd"][d % 10 > 3 ? 0 : (d % 100 - d % 10 !== 10) * d % 10];
     },
+
+    /** @param {FlagMap} fmap */ /** @return {string} */
+    'q': (o, fmap) => {
+        return fmap.q(o).toString();
+    },
 };
 
 const DATE_PARSER_FORMAT_REGEX = /('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])|yy(?:yy)?|d{1,4}|M{1,4}|H{1,2}|h{1,2}|m{1,2}|s{1,2}|T{1,2}|t{1,2}|[LloSZ]|f{1,7}|\.?F{1,7}|UTC|.+?/g;
@@ -311,6 +322,7 @@ const DATE_PARSER_MAP = {
     'UTC': () => '[+-][0-9]{2,4}',
     'o': () => '[+-][0-9]{4}',
     'S': () => 'th|st|nd|rd',
+    'q': () => '[0-9]',
 };
 
 export {

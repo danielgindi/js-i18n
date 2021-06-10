@@ -901,6 +901,10 @@ const i18n = {
                         }
                         break;
                     }
+
+                    case 'q':
+                        // Nothing to do with a parse quarter
+                        break;
                 }
             }
 
