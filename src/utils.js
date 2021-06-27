@@ -4,8 +4,7 @@ const hasOwnProperty = Object.prototype.hasOwnProperty;
 function extendDotted(target, data) {
     if (data == null) return;
     let dotted, targetDotted, i;
-    for (let key in data) {
-        if (!hasOwnProperty.call(data, key) || !data[key]) continue;
+    for (let key of Object.keys(data)) {
         dotted = key.split('.');
         targetDotted = target;
         for (i = 0; i < dotted.length - 1; i++) {
