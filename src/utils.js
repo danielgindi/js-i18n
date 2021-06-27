@@ -8,8 +8,10 @@ function extendDotted(target, data) {
         dotted = key.split('.');
         targetDotted = target;
         for (i = 0; i < dotted.length - 1; i++) {
+			if (targetDotted == null) break;
             targetDotted = targetDotted[dotted[i]];
         }
+		if (targetDotted == null) continue;
         targetDotted[dotted[dotted.length - 1]] = data[key];
     }
 }
