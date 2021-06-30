@@ -1139,7 +1139,8 @@ const i18n = {
                 /** @type string|null */
                 let gender = null;
                 if (filters && filters[0][0] === 'g' && filters[0][1] === ':') {
-                    gender = i18n.t(filters[0].substr(2));
+                    const genderKey = filters[0].substr(2);
+                    gender = data && (genderKey in data) ? data[genderKey] : i18n.t(genderKey);
 
                     if (gender === 'male') {
                         gender = 'm';
