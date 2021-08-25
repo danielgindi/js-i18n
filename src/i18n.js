@@ -33,6 +33,8 @@ let active = null;
 let locs = {}; // Here we will keep i18n objects, each key is a language code
 let originalLocs = {}; // Here we will keep original localizations before using extendLanguage
 
+let defaultGender = '';
+
 /**
  * The default plural form specifier.
  * This function returns a specifier for plural form, for the specified count.
@@ -315,12 +317,13 @@ const i18n = {
 
         if (options) {
 
-            if (typeof options['gender'] === 'string') { // Try for gender form
+            if (typeof options['gender'] === 'string' || defaultGender) { // Try for gender form
 
-                if (typeof loc === 'object' &&
+                if (loc !== null &&
+                    typeof loc === 'object' &&
                     !(loc instanceof Array)) {
 
-                    const gender = options['gender'];
+                    const gender = options['gender'] || defaultGender;
                     let genderized;
 
                     // Allow any gender, you can invent new ones...
@@ -336,23 +339,12 @@ const i18n = {
                         }
 
                         // Fallbacks for neutral gender
-                        if (genderized === undefined) {
-                            genderized = loc['neutral'];
-                        }
-
-                        if (genderized === undefined) {
-                            genderized = loc['n'];
-                        }
-
-                        if (genderized === undefined) {
-                            genderized = loc[''];
-                        }
+                        if (genderized === undefined) genderized = loc['neutral'];
+                        if (genderized === undefined) genderized = loc['n'];
+                        if (genderized === undefined) genderized = loc[''];
 
                         // Default fallback
-
-                        if (genderized === undefined) {
-                            genderized = loc;
-                        }
+                        if (genderized === undefined) genderized = loc;
                     }
 
                     loc = genderized;
@@ -1215,6 +1207,21 @@ const i18n = {
 
     },
 
+    /**
+     * Set the default gender.
+     * @param {string} gender
+     */
+    setDefaultGender: function (gender) {
+        defaultGender = gender || '';
+    },
+
+    /**
+     * Retrieves the default gender.
+     * @return {string}
+     */
+    getDefaultOptions: function () {
+        return defaultGender;
+    },
 };
 
 /**
