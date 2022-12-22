@@ -728,7 +728,7 @@ const i18n = {
             let year = null, month = null, day = null,
                 hours = null, hours12 = false, hoursTT, minutes = null,
                 seconds = null, milliseconds = null,
-                timezone = null;
+                timezone = null, timezoneSeconds = 0;
 
             let i = 0;
             const len = parts.length;
@@ -912,11 +912,21 @@ const i18n = {
                     if (hours < 12) hours += 12;
                 }
             }
+
             const parsedDate = new Date(year, month, day, hours || 0, minutes || 0, seconds || 0, milliseconds || 0);
             if (timezone !== null) {
+                const tzOffset = parsedDate.getTimezoneOffset();
                 timezone += parsedDate.getTimezoneOffset();
+                if (parsedDate.getSeconds() !== parsedDate.getUTCSeconds() && Math.trunc(tzOffset) === tzOffset) {
+                    timezoneSeconds -= 60 - (parsedDate.getUTCSeconds() - parsedDate.getSeconds());
+                }
             }
+
             parsedDate.setMinutes(parsedDate.getMinutes() - timezone);
+
+            if (timezoneSeconds) {
+                parsedDate.setSeconds(parsedDate.getSeconds() - timezoneSeconds);
+            }
 
             return parsedDate;
         };
