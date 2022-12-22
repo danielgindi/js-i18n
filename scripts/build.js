@@ -141,12 +141,13 @@ const Path = require('path');
         }
 
         if (task.minified) {
-            plugins.push(require('rollup-plugin-terser').terser({
+            plugins.push(require('@rollup/plugin-terser')({
                 toplevel: true,
                 compress: {
                     ecma: task.ecmaVersion,
                     passes: 2,
                 },
+                sourceMap: !!task.sourceMap,
             }));
         }
 
