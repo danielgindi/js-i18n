@@ -23,7 +23,8 @@
     "lint": "eslint -f codeframe ./",
     "lint-fix": "eslint -f codeframe --fix ./",
     "test": "mocha tests",
-    "prepare": "husky"
+    "prepare": "husky",
+    "prepublishOnly": "npm run build"
   },
   "author": "Daniel Cohen Gindi <danielgindi@gmail.com> (https://github.com/danielgindi)",
   "license": "MIT",
@@ -47,7 +48,6 @@
     "eslint": "^9.12.0",
     "eslint-formatter-codeframe": "^7.32.1",
     "esm": "^3.2.25",
-    "fs-extra": "^11.2.0",
     "globals": "^15.10.0",
     "husky": "^9.1.6",
     "mocha": "^10.7.3",
