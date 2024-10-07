@@ -1,5 +1,5 @@
-import { generateAllCasePermutations } from './string_case_permutations';
-import { padLeft, arrayToRegex } from './utils';
+import { generateAllCasePermutations } from './string_case_permutations.js';
+import { padLeft, arrayToRegex } from './utils.js';
 
 const DATE_FORMAT_REGEX = /d{1,4}|M{1,4}|yy(?:yy)?|([HhmsTt])\1?|[LloSZq]|f{1,7}|F{1,7}|UTC|('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])/g;
 const DATE_TIMEZONE_REGEX = /\b(?:[PMCEA][SDP]T|[a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)?(?:[-+]\d{4})?)\b/g;

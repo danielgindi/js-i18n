@@ -1,5 +1,3 @@
-const hasOwnProperty = Object.prototype.hasOwnProperty;
-
 // Helper function to extend an object using a synthetic object structure from dotted syntax to a real nested structure.
 function extendDotted(target, data) {
     if (data == null) return;
@@ -48,7 +46,7 @@ function padLeft(value, length, ch) {
 function supportsRegexLookbehind() {
     try {
         return '-'.replace(new RegExp('(?<!\\\\)-', 'gi'), '=') === '=';
-    } catch (err) {
+    } catch (ignore) {
         // ignored
     }
     return false;

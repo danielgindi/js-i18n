@@ -1,4 +1,4 @@
-import { padLeft } from './utils';
+import { padLeft } from './utils.js';
 
 const DEFAULT_DECIMAL_SEPARATOR = (1.1).toLocaleString().substr(1, 1);
 

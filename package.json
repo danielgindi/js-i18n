@@ -5,6 +5,7 @@
   "main": "dist/i18n.cjs.min.js",
   "module": "dist/i18n.es6.min.js",
   "broswer": "dist/i18n.umd.min.js",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/danielgindi/js-i18n"
@@ -19,11 +20,10 @@
   ],
   "scripts": {
     "build": "npm run lint && node ./scripts/build.js",
-    "prepublishOnly": "pinst --disable && npm run build",
-    "postpublish": "pinst --enable",
     "lint": "eslint -f codeframe ./",
     "lint-fix": "eslint -f codeframe --fix ./",
-    "test": "mocha tests"
+    "test": "mocha tests",
+    "prepare": "husky"
   },
   "author": "Daniel Cohen Gindi <danielgindi@gmail.com> (https://github.com/danielgindi)",
   "license": "MIT",
@@ -32,25 +32,26 @@
   },
   "homepage": "https://github.com/danielgindi/js-i18n",
   "devDependencies": {
-    "@babel/core": "^7.20.7",
-    "@babel/plugin-transform-runtime": "^7.19.6",
+    "@babel/core": "^7.25.7",
+    "@babel/plugin-transform-runtime": "^7.25.7",
     "@babel/polyfill": "^7.12.1",
-    "@babel/preset-env": "^7.20.2",
-    "@babel/runtime": "^7.20.7",
-    "@rollup/plugin-babel": "^6.0.3",
-    "@rollup/plugin-commonjs": "^24.0.0",
-    "@rollup/plugin-node-resolve": "^15.0.1",
-    "@rollup/plugin-replace": "^5.0.2",
-    "@rollup/plugin-terser": "^0.2.1",
-    "chai": "^4.3.7",
-    "core-js": "^3.26.1",
-    "eslint": "^8.30.0",
+    "@babel/preset-env": "^7.25.7",
+    "@babel/runtime": "^7.25.7",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^28.0.0",
+    "@rollup/plugin-node-resolve": "^15.3.0",
+    "@rollup/plugin-replace": "^6.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "chai": "^5.1.1",
+    "core-js": "^3.38.1",
+    "eslint": "^9.12.0",
     "eslint-formatter-codeframe": "^7.32.1",
     "esm": "^3.2.25",
-    "fs-extra": "^11.1.0",
-    "husky": "^8.0.2",
+    "fs-extra": "^11.2.0",
+    "globals": "^15.10.0",
+    "husky": "^9.1.6",
+    "mocha": "^10.7.3",
     "pinst": "^3.0.0",
-    "mocha": "^10.2.0",
-    "rollup": "^3.8.0"
+    "rollup": "^4.24.0"
   }
 }

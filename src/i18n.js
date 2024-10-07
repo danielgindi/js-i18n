@@ -1,6 +1,6 @@
 'use strict';
 
-import { extendDotted, regexEscape, supportsRegexLookbehind } from './utils';
+import { extendDotted, regexEscape, supportsRegexLookbehind } from './utils.js';
 import {
     DATE_FORMAT_REGEX,
     DATE_FLAG_SUBMAP_LOCAL,
@@ -8,8 +8,8 @@ import {
     DATE_FLAG_MAP,
     DATE_PARSER_FORMAT_REGEX,
     DATE_PARSER_MAP,
-} from './date_formats';
-import { applySpecifiers } from './printf_specs';
+} from './date_formats.js';
+import { applySpecifiers } from './printf_specs.js';
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -256,7 +256,7 @@ const i18n = {
 
         // `while` because we might try multiple times,
         // like first try with active locale, second time with fallback locale.
-        while (true) { // eslint-disable-line no-constant-condition
+        while (true) {
 
             if (options && typeof options['count'] === 'number') { // Try for plural form
 
@@ -1198,13 +1198,13 @@ const i18n = {
                 options = arguments[2];
             try {
                 key = JSON.parse(key);
-            } catch (e) {
+            } catch (ignored) {
                 return arguments[0];
             }
             if (options) {
                 try {
                     options = JSON.parse(options);
-                } catch (e) {
+                } catch (ignored) {
                     options = null;
                 }
             }
