@@ -86,10 +86,10 @@ const DATE_FLAG_MAP = {
     'MMMM': (o, fmap, culture) => culture['months'][fmap.M(o)],
 
     /** @param {FlagMap} fmap */ /** @return {string} */
-    'yy': (o, fmap) => String(fmap.y(o)).slice(2),
+    'yy': (o, fmap) => padLeft(String(fmap.y(o)).slice(2), 2, '0'),
 
     /** @param {FlagMap} fmap */ /** @return {string} */
-    'yyyy': (o, fmap) => fmap.y(o),
+    'yyyy': (o, fmap) => padLeft(fmap.y(o), 4, '0'),
 
     /** @param {FlagMap} fmap */ /** @return {number} */
     'h': (o, fmap) => fmap.H(o) % 12 || 12,
