@@ -1152,11 +1152,11 @@ const i18n = {
                 }
 
                 if (gender !== null) {
-                    value = i18n.t(key + '.' + gender);
-                    if (value === undefined) value = i18n.t(key + '.neutral');
-                    if (value === undefined) value = i18n.t(key + '.');
-                    if (value === undefined) value = i18n.t(key + '.m');
-                    if (value === undefined) value = i18n.t(key + '.f');
+                    value = i18n.t(key + '.' + gender, data);
+                    if (value === undefined) value = i18n.t(key + '.neutral', data);
+                    if (value === undefined) value = i18n.t(key + '.', data);
+                    if (value === undefined) value = i18n.t(key + '.m', data);
+                    if (value === undefined) value = i18n.t(key + '.f', data);
                 } else {
                     value = i18n.t(key, data);
                 }
