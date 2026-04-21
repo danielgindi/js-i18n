@@ -264,35 +264,36 @@ const i18n = {
                 for (i = 0, len = keys.length - 1; i < len; i++) {
                     loc = loc[keys[i]];
 
-                    // Avoid stepping into an undefined. Make systems more stable.
+                    // Avoid stepping into a null/undefined. Make systems more stable.
                     // Anyone who queries for an invalid `t(...)` should handle the `undefined` himself.
-                    if (loc === undefined) {
+                    if (loc == null) {
                         break;
                     }
                 }
 
-                let pluralSpec = locale.options.plural;
-                pluralSpec = pluralSpec(options['count']);
+                if (loc != null) {
+                    let pluralSpec = locale.options.plural;
+                    pluralSpec = pluralSpec(options['count']);
 
-                const key = keys[keys.length - 1]; // This is the last key in the keys array
+                    const key = keys[keys.length - 1]; // This is the last key in the keys array
 
-                if (pluralSpec && loc[key + '_' + pluralSpec]) {
-                    // We have a match for the plural form
-                    loc = loc[key + '_' + pluralSpec];
-                } else {
-                    // Take the bare one
-                    loc = loc[key];
+                    if (pluralSpec && loc[key + '_' + pluralSpec]) {
+                        // We have a match for the plural form
+                        loc = loc[key + '_' + pluralSpec];
+                    } else {
+                        // Take the bare one
+                        loc = loc[key];
+                    }
                 }
-
             } else {
                 // No need for the plural form, as no 'count' was specified
 
                 for (i = 0, len = keys.length; i < len; i++) {
                     loc = loc[keys[i]];
 
-                    // Avoid stepping into an undefined. Make systems more stable.
+                    // Avoid stepping into a null/undefined. Make systems more stable.
                     // Anyone who queries for an invalid `t(...)` should handle the `undefined` himself.
-                    if (loc === undefined) {
+                    if (loc == null) {
                         break;
                     }
                 }
