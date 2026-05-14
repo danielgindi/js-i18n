@@ -9,12 +9,20 @@ import { babel } from '@rollup/plugin-babel';
 import PluginTerser from '@rollup/plugin-terser';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import PluginCommonjs from '@rollup/plugin-commonjs';
+import typescript from '@rollup/plugin-typescript';
 import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
 
 (async () => {
 
     await rmdir('./dist', { recursive: true });
     await mkdir('./dist');
+
+    // Generate TypeScript declaration files first
+    console.info('Generating TypeScript declarations...');
+    execSync('npx tsc --emitDeclarationOnly --declaration --declarationMap --outDir ./dist', {
+        stdio: 'inherit',
+    });
 
     const rollupTasks = [{
         dest: 'dist/i18n.es6.js',
@@ -106,7 +114,7 @@ import { fileURLToPath } from 'node:url';
         ],
     }];
 
-    const inputFile = 'src/i18n.js';
+    const inputFile = 'src/i18n.ts';
 
     for (let task of rollupTasks) {
         console.info('Generating ' + task.dest + '...');
@@ -116,6 +124,18 @@ import { fileURLToPath } from 'node:url';
                 mainFields: ['module', 'main'],
             }),
             PluginCommonjs({}),
+            typescript({
+                tsconfig: './tsconfig.json',
+                declaration: false,
+                declarationMap: false,
+                sourceMap: !!task.sourceMap,
+                noEmitOnError: false,
+                compilerOptions: {
+                    strict: false,
+                    noImplicitAny: false,
+                    skipLibCheck: true,
+                },
+            }),
         ];
 
         plugins = plugins.concat(task.plugins || []);

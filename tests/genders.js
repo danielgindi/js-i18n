@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import i18n, { t } from '../src/i18n.js';
+import i18n, { t } from '../src/i18n.ts';
 
 describe('genders', () => {
 

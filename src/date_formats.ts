@@ -1,35 +1,48 @@
-import { generateAllCasePermutations } from './string_case_permutations.js';
-import { padLeft, arrayToRegex } from './utils.js';
+import { generateAllCasePermutations } from './string_case_permutations.ts';
+import { padLeft, arrayToRegex } from './utils.ts';
 
 const DATE_FORMAT_REGEX = /d{1,4}|M{1,4}|yy(?:yy)?|([HhmsTt])\1?|[LloSZq]|f{1,7}|F{1,7}|UTC|('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])/g;
 const DATE_TIMEZONE_REGEX = /\b(?:[PMCEA][SDP]T|[a-zA-Z ]+ (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)?(?:[-+]\d{4})?)\b/g;
 const DATE_TIMEZONE_CLIP_REGEX = /[^-+\dA-Z]/g;
 
-/** @typedef {{d: function, D: function, M: function, y: function, H: function, m: function, s: function, L: function, o: function, utcd: function, utc: function}} FlagMap */
+type FlagMap = {
+    d: (d: Date) => number;
+    D: (d: Date) => number;
+    M: (d: Date) => number;
+    y: (d: Date) => number;
+    H: (d: Date) => number;
+    m: (d: Date) => number;
+    s: (d: Date) => number;
+    L: (d: Date) => number;
+    o: (d: Date) => number;
+    utcd: (d: Date) => string;
+    utc: (d: Date) => string;
+    q: (d: Date) => number;
+};
 
-/** @type {FlagMap} */
-const DATE_FLAG_SUBMAP_LOCAL = {
-    /** @param {Date} d */ /** @returns {number} */ 'd': d => d.getDate(),
-    /** @param {Date} d */ /** @returns {number} */ 'D': d => d.getDay(),
-    /** @param {Date} d */ /** @returns {number} */ 'M': d => d.getMonth(),
-    /** @param {Date} d */ /** @returns {number} */ 'y': d => d.getFullYear(),
-    /** @param {Date} d */ /** @returns {number} */ 'H': d => d.getHours(),
-    /** @param {Date} d */ /** @returns {number} */ 'm': d => d.getMinutes(),
-    /** @param {Date} d */ /** @returns {number} */ 's': d => d.getSeconds(),
-    /** @param {Date} d */ /** @returns {number} */ 'L': d => d.getMilliseconds(),
-    /** @param {Date} d */ /** @returns {number} */ 'o': () => 0,
-    /** @param {Date} d */
-    /** @returns {string} */ 'utcd': d => ((d + '').match(DATE_TIMEZONE_REGEX) || ['']).pop().replace(DATE_TIMEZONE_CLIP_REGEX, ''),
-    /** @param {Date} d */
-    /** @returns {string} */ 'utc': d => {
+type Culture = Record<string, any>;
+type DateFlagFormatter = (o: Date, fmap: FlagMap, culture: Culture) => string | number;
+type DateParserFactory = (c: Culture, s?: boolean) => string | [string, boolean];
+
+const DATE_FLAG_SUBMAP_LOCAL: FlagMap = {
+    'd': d => d.getDate(),
+    'D': d => d.getDay(),
+    'M': d => d.getMonth(),
+    'y': d => d.getFullYear(),
+    'H': d => d.getHours(),
+    'm': d => d.getMinutes(),
+    's': d => d.getSeconds(),
+    'L': d => d.getMilliseconds(),
+    'o': () => 0,
+    'utcd': d => ((d + '').match(DATE_TIMEZONE_REGEX) || ['']).pop().replace(DATE_TIMEZONE_CLIP_REGEX, ''),
+    'utc': d => {
         let z = d.getTimezoneOffset();
         const s = (z > 0 ? '-' : '+');
         z = z < 0 ? -z : z;
         const zm = z % 60;
         return s + padLeft((z - zm) / 60, 2, '0') + ':' + (zm ? padLeft(zm, 2, '0') : '');
     },
-    /** @param {Date} d */
-    /** @returns {number} */ 'q': d => {
+    'q': d => {
         const m = d.getMonth();
         if (m < 3) return 1;
         if (m < 6) return 2;
@@ -38,20 +51,19 @@ const DATE_FLAG_SUBMAP_LOCAL = {
     },
 };
 
-/** @type {FlagMap} */
-const DATE_FLAG_SUBMAP_UTC = {
-    /** @param {Date} d */ /** @returns {number} */ 'd': d => d.getUTCDate(),
-    /** @param {Date} d */ /** @returns {number} */ 'D': d => d.getUTCDay(),
-    /** @param {Date} d */ /** @returns {number} */ 'M': d => d.getUTCMonth(),
-    /** @param {Date} d */ /** @returns {number} */ 'y': d => d.getUTCFullYear(),
-    /** @param {Date} d */ /** @returns {number} */ 'H': d => d.getUTCHours(),
-    /** @param {Date} d */ /** @returns {number} */ 'm': d => d.getUTCMinutes(),
-    /** @param {Date} d */ /** @returns {number} */ 's': d => d.getUTCSeconds(),
-    /** @param {Date} d */ /** @returns {number} */ 'L': d => d.getUTCMilliseconds(),
-    /** @param {Date} d */ /** @returns {number} */ 'o': d => d.getTimezoneOffset(),
-    /** @param {Date} d */ /** @returns {string} */ 'utcd': () => "UTC",
-    /** @param {Date} d */ /** @returns {string} */ 'utc': () => "Z",
-    /** @param {Date} d */ /** @returns {number} */ 'q': d => {
+const DATE_FLAG_SUBMAP_UTC: FlagMap = {
+    'd': d => d.getUTCDate(),
+    'D': d => d.getUTCDay(),
+    'M': d => d.getUTCMonth(),
+    'y': d => d.getUTCFullYear(),
+    'H': d => d.getUTCHours(),
+    'm': d => d.getUTCMinutes(),
+    's': d => d.getUTCSeconds(),
+    'L': d => d.getUTCMilliseconds(),
+    'o': d => d.getTimezoneOffset(),
+    'utcd': () => "UTC",
+    'utc': () => "Z",
+    'q': d => {
         const m = d.getUTCMonth();
         if (m < 3) return 1;
         if (m < 6) return 2;
@@ -60,134 +72,100 @@ const DATE_FLAG_SUBMAP_UTC = {
     },
 };
 
-const DATE_FLAG_MAP = {
-    /** @param {FlagMap} fmap */ /** @return {string} */
+const DATE_FLAG_MAP: Record<string, DateFlagFormatter> = {
     'd': (o, fmap) => fmap.d(o),
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'dd': (o, fmap) => padLeft(fmap.d(o), 2, '0'),
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'ddd': (o, fmap, culture) => culture['weekdays_short'][fmap.D(o)],
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'dddd': (o, fmap, culture) => culture['weekdays'][fmap.D(o)],
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'M': (o, fmap) => fmap.M(o) + 1,
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'MM': (o, fmap) => padLeft(fmap.M(o) + 1, 2, '0'),
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'MMM': (o, fmap, culture) => culture['months_short'][fmap.M(o)],
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'MMMM': (o, fmap, culture) => culture['months'][fmap.M(o)],
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'yy': (o, fmap) => padLeft(String(fmap.y(o)).slice(2), 2, '0'),
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'yyyy': (o, fmap) => padLeft(fmap.y(o), 4, '0'),
 
-    /** @param {FlagMap} fmap */ /** @return {number} */
     'h': (o, fmap) => fmap.H(o) % 12 || 12,
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'hh': (o, fmap) => padLeft(fmap.H(o) % 12 || 12, 2, '0'),
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'H': (o, fmap) => fmap.H(o),
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'HH': (o, fmap) => padLeft(fmap.H(o), 2, '0'),
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'm': (o, fmap) => fmap.m(o),
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'mm': (o, fmap) => padLeft(fmap.m(o), 2, '0'),
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     's': (o, fmap) => fmap.s(o),
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'ss': (o, fmap) => padLeft(fmap.s(o), 2, '0'),
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'l': (o, fmap) => padLeft(fmap.L(o), 3, '0'),
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'L': (o, fmap) => {
         const L = fmap.L(o);
         return padLeft(L > 99 ? Math.round(L / 10) : L, 2, '0');
     },
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'f': (o, fmap) => Math.floor(fmap.L(o) / 100).toString(),
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'ff': (o, fmap) => padLeft(Math.floor(fmap.L(o) / 10), 2, '0'),
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'fff': (o, fmap) => padLeft(fmap.L(o), 3, '0'),
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'ffff': (o, fmap) => padLeft(fmap.L(o), 3, '0') + '0',
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'fffff': (o, fmap) => padLeft(fmap.L(o), 3, '0') + '00',
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'ffffff': (o, fmap) => padLeft(fmap.L(o), 3, '0') + '000',
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'fffffff': (o, fmap) => padLeft(fmap.L(o), 3, '0') + '0000',
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'F': (o, fmap) => {
         const v = Math.floor(fmap.L(o) / 100);
         if (v === 0) return '';
         return v.toString();
     },
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'FF': (o, fmap) => {
         const v = Math.floor(fmap.L(o) / 10);
         if (v === 0) return '';
         return padLeft(v, 2, '0');
     },
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'FFF': (o, fmap) => {
         const v = fmap.L(o);
         if (v === 0) return '';
         return padLeft(v, 3, '0');
     },
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'FFFF': (o, fmap) => {
         const v = fmap.L(o);
         if (v === 0) return '';
         return padLeft(v, 3, '0') + '0';
     },
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'FFFFF': (o, fmap) => {
         const v = fmap.L(o);
         if (v === 0) return '';
         return padLeft(v, 3, '0') + '00';
     },
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'FFFFFF': (o, fmap) => {
         const v = fmap.L(o);
         if (v === 0) return '';
         return padLeft(v, 3, '0') + '000';
     },
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'FFFFFFF': (o, fmap) => {
         const v = fmap.L(o);
         if (v === 0) return '';
@@ -210,25 +188,21 @@ const DATE_FLAG_MAP = {
         culture['am_upper'] || 'AM' :
         culture['pm_upper'] || 'PM',
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'Z': (o, fmap) => fmap.utc(o),
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'UTC': (o, fmap) => fmap.utcd(o),
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'o': (o, fmap) => {
-        o = fmap.o(o);
-        return (o > 0 ? "-" : "+") + padLeft(Math.floor(Math.abs(o) / 60) * 100 + Math.abs(o) % 60, 4, '0');
+        let oo = fmap.o(o);
+        return (oo > 0 ? "-" : "+") + padLeft(Math.floor(Math.abs(oo) / 60) * 100 + Math.abs(oo) % 60, 4, '0');
     },
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'S': (o, fmap) => {
         const d = /**@type number*/fmap.d(o);
-        return ["th", "st", "nd", "rd"][d % 10 > 3 ? 0 : (d % 100 - d % 10 !== 10) * d % 10];
+        const lastDigit = d % 10;
+        return ["th", "st", "nd", "rd"][lastDigit > 3 ? 0 : ((d % 100) - lastDigit !== 10) ? lastDigit : 0];
     },
 
-    /** @param {FlagMap} fmap */ /** @return {string} */
     'q': (o, fmap) => {
         return fmap.q(o).toString();
     },
@@ -236,7 +210,7 @@ const DATE_FLAG_MAP = {
 
 const DATE_PARSER_FORMAT_REGEX = /('[^'\\]*(?:\\.[^'\\]*)*')|("[^"\\]*(?:\\.[^"\\]*)*")|(\[[^\]\\]*(?:\\.[^\]\\]*)*])|yy(?:yy)?|d{1,4}|M{1,4}|H{1,2}|h{1,2}|m{1,2}|s{1,2}|T{1,2}|t{1,2}|[LloSZ]|f{1,7}|\.?F{1,7}|UTC|.+?/g;
 
-const DATE_PARSER_MAP = {
+const DATE_PARSER_MAP: Record<string, DateParserFactory> = {
     'yyyy': (c, s) => s ? '[0-9]{4}' : '[0-9]{2}|[0-9]{4}',
     'yy': () => '[0-9]{2}',
     'MMMM': (c) => arrayToRegex(c['months']),
@@ -333,3 +307,5 @@ export {
     DATE_PARSER_FORMAT_REGEX,
     DATE_PARSER_MAP,
 };
+
+

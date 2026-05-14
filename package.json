@@ -5,7 +5,17 @@
   "main": "dist/i18n.cjs.min.js",
   "module": "dist/i18n.es6.min.js",
   "broswer": "dist/i18n.umd.min.js",
+  "types": "dist/index.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/i18n.es6.min.js",
+      "require": "./dist/i18n.cjs.min.js",
+      "default": "./dist/i18n.es6.min.js"
+    },
+    "./package.json": "./package.json"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/danielgindi/js-i18n"
@@ -43,6 +53,7 @@
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-replace": "^6.0.3",
     "@rollup/plugin-terser": "^1.0.0",
+    "@rollup/plugin-typescript": "^12.3.0",
     "chai": "^6.2.2",
     "core-js": "^3.49.0",
     "eslint": "^9.39.4",
@@ -52,6 +63,8 @@
     "husky": "^9.1.7",
     "mocha": "^11.7.5",
     "pinst": "^3.0.0",
-    "rollup": "^4.60.2"
+    "rollup": "^4.60.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.3"
   }
 }

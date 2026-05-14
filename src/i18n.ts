@@ -1,6 +1,6 @@
 'use strict';
 
-import { extendDotted, regexEscape, supportsRegexLookbehind } from './utils.js';
+import { extendDotted, regexEscape, supportsRegexLookbehind } from './utils.ts';
 import {
     DATE_FORMAT_REGEX,
     DATE_FLAG_SUBMAP_LOCAL,
@@ -8,8 +8,8 @@ import {
     DATE_FLAG_MAP,
     DATE_PARSER_FORMAT_REGEX,
     DATE_PARSER_MAP,
-} from './date_formats.js';
-import { applySpecifiers } from './printf_specs.js';
+} from './date_formats.ts';
+import { applySpecifiers } from './printf_specs.ts';
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -24,24 +24,24 @@ const hasOwnProperty = Object.prototype.hasOwnProperty;
  */
 
 const DEFAULT_DECIMAL_SEPARATOR = (1.1).toLocaleString().substr(1, 1);
-const EMPTY_ARRAY = [];
+const EMPTY_ARRAY: string[] = [];
 
-let activeLanguage = '';
-let fallbackLanguage = '';
-let active = null;
+let activeLanguage: string = '';
+let fallbackLanguage: string = '';
+let active: Loc | null = null;
 
-let locs = {}; // Here we will keep i18n objects, each key is a language code
-let originalLocs = {}; // Here we will keep original localizations before using extendLanguage
+let locs: Record<string, Loc> = {}; // Here we will keep i18n objects, each key is a language code
+let originalLocs: Record<string, Loc> = {}; // Here we will keep original localizations before using extendLanguage
 
-let defaultGender = '';
+let defaultGender: string = '';
 
 /**
  * The default plural form specifier.
  * This function returns a specifier for plural form, for the specified count.
- * @param {Number} count the number that we need to inspect
- * @returns {string}
+ * @param count the number that we need to inspect
+ * @returns plural form key suffix
  */
-const defaultPlural = function (count) {
+const defaultPlural = function (count: number): string {
     if (count === 0) return 'zero';
     if (count === 1) return 'one';
     return 'plural';
@@ -49,11 +49,11 @@ const defaultPlural = function (count) {
 
 /**
  * Encodes the value {value} using the specified {encoding}
- * @param {string} value the value to encode
- * @param {string} encoding for filters
- * @returns {*}
+ * @param value the value to encode
+ * @param encoding filter name
+ * @returns encoded value
  */
-const filterValue = function (value, encoding) {
+const filterValue = function (value: any, encoding: string): any {
     if (encoding === 'html') {
         value = (value == null ? '' : (value + '')).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#39;").replace(/"/g, "&quot;");
     }
@@ -77,7 +77,7 @@ const filterValue = function (value, encoding) {
         value = value[0].toUpperCase() + value.substr(1).toLowerCase();
     }
     else if (encoding.substr(0, 7) === 'printf ') {
-        const localeOptions = active.options;
+        const localeOptions = active!.options;
         value = applySpecifiers(value, encoding.substr(7), localeOptions.decimal, localeOptions.thousands);
     }
 
@@ -92,21 +92,59 @@ const BASE_REGEX = (() => {
     }
 })();
 
-/** @typedef i18n */
-const i18n = {
+type TranslationData = Record<string, any> & {
+    count?: number;
+    gender?: string;
+};
+
+type TranslateFunction = {
+    <T = any>(keypath: string, options?: TranslationData): T;
+    <T = any>(keypath: string, useOriginal: boolean, options?: TranslationData): T;
+    <T = any>(keypath: readonly string[], options?: TranslationData): T;
+    <T = any>(keypath: readonly string[], useOriginal: boolean, options?: TranslationData): T;
+    <T = any>(key1: string, key2: string, ...rest: Array<string | boolean | TranslationData | undefined>): T;
+};
+
+type I18nApi = {
+    t: TranslateFunction;
+    add(langCode: string, data: Record<string, any>, options?: AddLanguageOptions): I18nApi;
+    reset(): void;
+    getLanguage(lang: string, tryFallbacks?: boolean): Loc | undefined;
+    getDecimalSeparator(): string;
+    getThousandsSeparator(): string;
+    setActiveLanguage(lang: string): I18nApi;
+    setFallbackLanguage(lang: string): I18nApi;
+    setActiveLanguageFromMetaTag(): I18nApi;
+    getActiveLanguage(): string;
+    getAvailableLanguages(): string[];
+    extendLanguage(lang: string, data: Record<string, any>): I18nApi;
+    extendLanguages(data: Record<string, Record<string, any>>): I18nApi;
+    physicalSize(bytes: number): LocalizedPhysicalFileSize;
+    formatDate(date: any, format: string, culture?: any): string;
+    parseDate(date: string, format?: string, culture?: any, strict?: boolean): Date;
+    createDateParser(format: string, culture: any, strict?: boolean): (date: string, culture: any) => Date;
+    detectShortDateFormat(fallback: string): string;
+    displayNumber(value: number | null | undefined, thousands?: boolean): string;
+    formatRawNumberStringForDisplay(value: string, thousands?: boolean): string;
+    parseNumber(value: number | string | null, thousands?: boolean): number | null;
+    processLocalizedString(value: any, data?: any): string;
+    setDefaultGender(gender: string): void;
+    getDefaultOptions(): string;
+};
+
+const i18n: I18nApi = {
 
     /**
      * Add a language to the localization object
      * @public
-     * @param {string} langCode language code
-     * @param {Object} data localization object
-     * @param {AddLanguageOptions?} options options for this language
-     * @returns {i18n} self
+     * @param langCode language code
+     * @param data localization object
+     * @param options options for this language
      */
-    add: function (langCode, data, options) {
+    add(langCode: string, data: Record<string, any>, options?: AddLanguageOptions): I18nApi {
         options = options || {};
 
-        const locOptions = {};
+        const locOptions = {} as LocOptions;
         locOptions.plural = options.plural || defaultPlural;
         locOptions.decimal = options.decimal || DEFAULT_DECIMAL_SEPARATOR;
         locOptions.thousands = options.thousands || (locOptions.decimal === ',' ? '.' : ',');
@@ -134,7 +172,7 @@ const i18n = {
     /**
      * Remove all languages
      */
-    reset: function () {
+    reset() {
         locs = {};
         originalLocs = {};
         activeLanguage = '';
@@ -144,17 +182,17 @@ const i18n = {
     /**
      * Get a language object from the localization
      * @public
-     * @param {string} lang language code
-     * @param {boolean?} tryFallbacks should we try to search in fallback scenarios i.e. 'en' for 'en-US'
-     * @returns {{ code: string, data: Object, options: Object }} language object
+     * @param lang language code
+     * @param tryFallbacks should we try to search in fallback scenarios i.e. 'en' for 'en-US'
+     * @returns language object
      */
-    getLanguage: function (lang, tryFallbacks) {
+    getLanguage(lang: string, tryFallbacks?: boolean): Loc | undefined {
         if (tryFallbacks) {
             if (lang === 'iw') lang = 'he'; // Fallback from Google's old spec, if the setting came from an old Android device
             if (!lang) {
                 lang = this.getAvailableLanguages()[0];
             }
-            let found = null;
+            let found: Loc | null = null;
             while (typeof lang === 'string') {
                 if ((found = locs[lang])) break;
 
@@ -196,32 +234,31 @@ const i18n = {
      *   or the "gender" property for selecting a gender from the target value.
      *
      * @public
-     * @param {...}
-     * @returns {*} localized value or object
+     * @returns localized value or object
      */
-    t: function () {
+    t: (function (): any {
         const args = arguments;
         let argIndex = 0,
-            keys,
+            keys: string[],
             useOriginal = false,
-            locale,
+            locale: Loc,
             tryFallback = true,
-            options,
-            i,
-            len;
+            options: any,
+            i: number,
+            len: number;
 
         // Normalize key(s)
         if (typeof args[0] === 'string' && typeof args[1] !== 'string') {
-            keys = args[argIndex++];
-            if (keys.length === 0) {
+            const key = args[argIndex++];
+            if (key.length === 0) {
                 keys = EMPTY_ARRAY;
             } else {
-                keys = keys.split('.');
+                keys = key.split('.');
             }
         } else if (typeof args[0] === 'object' && 'length' in args[0]) {
             keys = args[argIndex++];
         } else if (typeof args[0] === 'string' && typeof args[1] === 'string') {
-            let arg;
+            let arg: any;
             keys = [];
             for (len = args.length; argIndex < len; argIndex++) {
                 arg = args[argIndex];
@@ -247,7 +284,7 @@ const i18n = {
             locale = active;
         }
 
-        let loc = locale.data;
+        let loc: Record<string, any>|string = locale.data;
 
         // If no key is specified, return the root namespace
         if (!keys.length) {
@@ -262,7 +299,7 @@ const i18n = {
 
                 // Loop on all of them except the last. We are going to test the last key combined with plural specifiers
                 for (i = 0, len = keys.length - 1; i < len; i++) {
-                    loc = loc[keys[i]];
+                    loc = (loc as Record<string, any>)[keys[i]];
 
                     // Avoid stepping into a null/undefined. Make systems more stable.
                     // Anyone who queries for an invalid `t(...)` should handle the `undefined` himself.
@@ -272,24 +309,24 @@ const i18n = {
                 }
 
                 if (loc != null) {
-                    let pluralSpec = locale.options.plural;
-                    pluralSpec = pluralSpec(options['count']);
+                    let pluralSpecFn = locale.options.plural;
+                    let pluralSpec = pluralSpecFn(options['count']);
 
                     const key = keys[keys.length - 1]; // This is the last key in the keys array
 
-                    if (pluralSpec && loc[key + '_' + pluralSpec]) {
+                    if (pluralSpec && (loc as Record<string, any>)[key + '_' + pluralSpec]) {
                         // We have a match for the plural form
-                        loc = loc[key + '_' + pluralSpec];
+                        loc = (loc as Record<string, any>)[key + '_' + pluralSpec];
                     } else {
                         // Take the bare one
-                        loc = loc[key];
+                        loc = (loc as Record<string, any>)[key];
                     }
                 }
             } else {
                 // No need for the plural form, as no 'count' was specified
 
                 for (i = 0, len = keys.length; i < len; i++) {
-                    loc = loc[keys[i]];
+                    loc = (loc as Record<string, any>)[keys[i]];
 
                     // Avoid stepping into a null/undefined. Make systems more stable.
                     // Anyone who queries for an invalid `t(...)` should handle the `undefined` himself.
@@ -325,7 +362,7 @@ const i18n = {
                     !(loc instanceof Array)) {
 
                     const gender = options['gender'] || defaultGender;
-                    let genderized;
+                    let genderized: any;
 
                     // Allow any gender, you can invent new ones...
                     genderized = loc[gender];
@@ -362,34 +399,34 @@ const i18n = {
         }
 
         return loc;
-    },
+    }) as TranslateFunction,
 
     /**
      * Get the decimal seperator for the active locale
      * @public
-     * @returns {string} decimal separator
+     * @returns decimal separator
      */
-    getDecimalSeparator: function () {
-        return active.options.decimal;
+    getDecimalSeparator(): string {
+        return active!.options.decimal;
     },
 
     /**
      * Get the thousands seperator for the active locale
      * @public
-     * @returns {string} thousands separator
+     * @returns thousands separator
      */
-    getThousandsSeparator: function () {
-        return active.options.thousands;
+    getThousandsSeparator(): string {
+        return active!.options.thousands;
     },
 
     /**
      * Set current active language using a language code.
      * The function will fall back from full to two-letter ISO codes (en-US to en) and from bad Android like codes (en_US to en).
      * @public
-     * @param {string} lang the language code to use
-     * @returns {i18n} self
+     * @param lang the language code to use
+     * @returns self
      */
-    setActiveLanguage: function (lang) {
+    setActiveLanguage(lang: string) {
         const found = this.getLanguage(lang, true);
         active = found;
         activeLanguage = found.code;
@@ -402,10 +439,10 @@ const i18n = {
      * The function will fall back from full to two-letter ISO codes (en-US to en) and from bad Android like codes (en_US to en).
      * Note: For performance reasons, the fallback happens only if <code>setFallbackLanguage(...)</code> is called when all languages are already added. Otherwise, the specified language code is used as it is.
      * @public
-     * @param {string} lang the language code to use
-     * @returns {i18n} self
+     * @param lang the language code to use
+     * @returns self
      */
-    setFallbackLanguage: function (lang) {
+    setFallbackLanguage(lang: string) {
         const found = this.getLanguage(lang, true);
         fallbackLanguage = found ? found.code : lang;
         return this;
@@ -415,13 +452,13 @@ const i18n = {
      * Set current active language using a language code found in the document's lang attribute or a relevant meta tag.
      * Calls setActiveLanguage to do the dirty work after detecting language code.
      * @public
-     * @returns {i18n} self
+     * @returns self
      */
-    setActiveLanguageFromMetaTag: function () {
+    setActiveLanguageFromMetaTag() {
         let lang = document.documentElement.getAttribute('lang') || document.documentElement.getAttribute('xml:lang');
         if (!lang) {
             const metas = document.getElementsByTagName('meta');
-            let i = 0, meta;
+            let i = 0, meta: HTMLMetaElement;
             for (; i < metas.length; i++) {
                 meta = metas[i];
                 if ((meta.getAttribute('http-equiv') || '').toLowerCase() === 'content-language') {
@@ -436,19 +473,19 @@ const i18n = {
     /**
      * Get the current active language code.
      * @public
-     * @returns {string} current active language code
+     * @returns current active language code
      */
-    getActiveLanguage: function () {
+    getActiveLanguage(): string {
         return activeLanguage;
     },
 
     /**
      * Get an array of the available language codes
      * @public
-     * @returns {string[]} array of the available language codes
+     * @returns array of the available language codes
      */
-    getAvailableLanguages: function () {
-        const langs = [];
+    getAvailableLanguages(): string[] {
+        const langs: string[] = [];
         for (let key in locs) {
             if (!hasOwnProperty.call(locs, key)) continue;
             langs.push(key);
@@ -461,11 +498,11 @@ const i18n = {
      * In order to allow easy storage and retrieval of extensions from DBs, the extension data is built with
      *   dotted syntax instead of a hieararchy of objects. i.e {"parent.child": "value"}
      * @public
-     * @param {string} lang language code
-     * @param {Object} data localization object
-     * @returns {i18n} self
+     * @param lang language code
+     * @param data localization object
+     * @returns self
      */
-    extendLanguage: function (lang, data) {
+    extendLanguage(lang: string, data: Record<string, any>) {
         if (locs[lang]) {
             if (!originalLocs[lang]) { // Back it up first
                 originalLocs[lang] = JSON.parse(JSON.stringify(locs[lang]));
@@ -478,10 +515,10 @@ const i18n = {
     /**
      * Extend the entire languages array, with the help of the extendLanguage function.
      * @public
-     * @param {Object} data the localization extension object. each language as the key and extension object as the value.
-     * @returns {i18n} self
+     * @param data the localization extension object. each language as the key and extension object as the value.
+     * @returns self
      */
-    extendLanguages: function (data) {
+    extendLanguages(data: Record<string, Record<string, any>>) {
         for (let lang in data) {
             if (!hasOwnProperty.call(data, lang)) continue;
             if (locs[lang]) {
@@ -497,11 +534,11 @@ const i18n = {
     /**
      * Retrieve a localized string of a physical file size, assuming that the "size_abbrs" key is available.
      * @public
-     * @param {number} bytes the number of bytes
-     * @returns {LocalizedPhysicalFileSize} localized size
+     * @param bytes the number of bytes
+     * @returns localized size
      */
-    physicalSize: function (bytes) {
-        let ret;
+    physicalSize(bytes: number): LocalizedPhysicalFileSize {
+        let ret: LocalizedPhysicalFileSize;
         const loc = i18n.t('size_abbrs');
         if (bytes < 100) ret = { size: bytes, name: loc['b'] };
         else if (bytes < 101376) ret = { size: bytes / 1024.0, name: loc['kb'] };
@@ -516,13 +553,13 @@ const i18n = {
      * Format a date to a localized string, assuming that the "calendar" key is available.
      * Supports all formatting codes known to humanity.
      * @public
-     * @param {Date|string|number} date The date to format
-     * @param {string} format The format
-     * @param {string|Object|null|?} culture Can accept a culture code, a culture object,
+     * @param date The date to format
+     * @param format The format
+     * @param culture Can accept a culture code, a culture object,
      *                                       or a simple "calendar" object which contains the keys "months", "months_short", "days" and "days_short"
-     * @returns {string} A localized date
+     * @returns A localized date
      */
-    formatDate: function (date, format, culture) {
+    formatDate(date: any, format: string, culture?: any): string {
 
         if (culture && typeof culture === 'string') {
             culture = i18n.getLanguage(culture, true);
@@ -570,9 +607,9 @@ const i18n = {
 
         return format.replace(
             DATE_FORMAT_REGEX,
-                token => (token in DATE_FLAG_MAP)
+                token => ((token in DATE_FLAG_MAP)
                     ? (DATE_FLAG_MAP[token])(date, f, culture)
-                    : token.slice(1, token.length - 1),
+                    : token.slice(1, token.length - 1)) as string,
         );
     },
 
@@ -586,14 +623,14 @@ const i18n = {
      * This function actually uses the `createDateParser(...)` function, and caches the result.
      * @public
      * @expose
-     * @param {string} date The date to parse
-     * @param {string?} format The format. Defaults to UTC ISO. (yyyy-MM-DD'T'HH:mm:ssZ)
-     * @param {string|Object|null|?} culture Can accept a culture code, a culture object,
+     * @param date The date to parse
+     * @param format The format. Defaults to UTC ISO. (yyyy-MM-DD'T'HH:mm:ssZ)
+     * @param culture Can accept a culture code, a culture object,
      *                                       or a simple "calendar" object which contains the keys "months", "months_short", "days" and "days_short"
-     * @param {boolean?} strict Should the parser be strict? false by default, forgiving missing digits etc.
-     * @returns {Date} The parsed date
+     * @param strict Should the parser be strict? false by default, forgiving missing digits etc.
+     * @returns The parsed date
      */
-    parseDate: function (date, format, culture, strict) {
+    parseDate(date: string, format?: string, culture?: any, strict?: boolean): Date {
 
         if (culture && typeof culture === 'string') {
             culture = i18n.getLanguage(culture, true);
@@ -618,7 +655,7 @@ const i18n = {
             }
         }
 
-        let compiled = culture[strict ? '_compiledParsersE' : '_compiledParsers'];
+        let compiled: Record<string, (date: string, culture: any) => Date> = culture[strict ? '_compiledParsersE' : '_compiledParsers'];
         if (!compiled) {
             culture[strict ? '_compiledParsersE' : '_compiledParsers'] = compiled = {};
         }
@@ -638,20 +675,20 @@ const i18n = {
      * If year is missing, it will default to current year. Anything else will default to zero.
      * @public
      * @expose
-     * @param {string} format The format
-     * @param {Object} culture An object which contains the keys "months", "months_short", "days" and "days_short"
-     * @param {boolean} strict Should the parser be strict? false by default, forgiving missing digits etc.
-     * @returns {function(string):Date} The parser function
+     * @param format The format
+     * @param culture An object which contains the keys "months", "months_short", "days" and "days_short"
+     * @param strict Should the parser be strict? false by default, forgiving missing digits etc.
+     * @returns The parser function
      */
-    createDateParser: function (format, culture, strict) {
+    createDateParser(format: string, culture: any, strict?: boolean): (date: string, culture: any) => Date {
 
-        let regex = '';
-        const regexParts = [];
+        let regex: string | RegExp = '';
+        const regexParts: string[] = [];
 
-        const processFormat = format => {
+        const processFormat = (format: string) => {
             const formatParts = format.match(DATE_PARSER_FORMAT_REGEX);
 
-            let i, count, part, shouldStrict;
+            let i: number, count: number, part: string, shouldStrict: boolean;
 
             // Remove all empty groups
             for (i = 0, count = formatParts.length; i < count; i++) {
@@ -678,7 +715,7 @@ const i18n = {
                         (i > 0 && hasOwnProperty.call(DATE_PARSER_MAP, formatParts[i - 1])) || // Previous part is not some kind of a boundary
                         (i < count - 1 && hasOwnProperty.call(DATE_PARSER_MAP, formatParts[i + 1])); // Next part is not some kind of a boundary
 
-                    let parserOption = DATE_PARSER_MAP[part](culture, shouldStrict);
+                    let parserOption: any = DATE_PARSER_MAP[part](culture, shouldStrict);
                     let isRaw = false;
                     if (Array.isArray(parserOption)) {
                         parserOption = parserOption[0];
@@ -717,23 +754,23 @@ const i18n = {
         const baseYear = Math.floor((new Date()).getFullYear() / 100) * 100;
 
         // Return a parser function
-        return date => {
+        return (date: string, culture: any): Date => {
             date = date + '';
-            const parts = date.match(regex);
+            const parts = date.match(regex as RegExp);
             if (!parts) return null;
 
             parts.splice(0, 1); // Remove main capture group 0
 
             const now = new Date(),
                 nowYear = now.getFullYear();
-            let year = null, month = null, day = null,
-                hours = null, hours12 = false, hoursTT, minutes = null,
-                seconds = null, milliseconds = null,
-                timezone = null, timezoneSeconds = 0;
+            let year: number | null = null, month: number | null = null, day: number | null = null,
+                hours: number | null = null, hours12 = false, hoursTT: string, minutes: number | null = null,
+                seconds: number | null = null, milliseconds: number | null = null,
+                timezone: number | null = null, timezoneSeconds = 0;
 
             let i = 0;
             const len = parts.length;
-            let part, tmp;
+            let part: string, tmp: number;
             for (; i < len; i++) {
                 part = parts[i];
                 if (part === undefined) continue;
@@ -939,10 +976,10 @@ const i18n = {
      * Currently browsers do not seem to behave and use the correct formats of the OS!
      * @public
      * @expose
-     * @param {string} fallback a fallback date for a case where the browser does not support this functionality.
-     * @returns {string} the detected format, the fallback, or dd/MM/yyyy as default.
+     * @param fallback a fallback date for a case where the browser does not support this functionality.
+     * @returns the detected format, the fallback, or dd/MM/yyyy as default.
      */
-    detectShortDateFormat: function (fallback) {
+    detectShortDateFormat(fallback: string): string {
         if (!Date.prototype.toLocaleDateString) return fallback || 'dd/MM/yyyy';
 
         return new Date(2013, 1, 1).toLocaleDateString()
@@ -955,36 +992,36 @@ const i18n = {
      * Format a number for display using the correct decimal separator detected from the browser.
      * @public
      * @expose
-     * @param {number|null} value the value to format.
-     * @param {boolean=} thousands should we add a thousands separator
-     * @returns {string} The formatted number as string.
+     * @param value the value to format.
+     * @param thousands should we add a thousands separator
+     * @returns The formatted number as string.
      *                   If null or empty string is supplied, then an empty string is returned.
      *                   If anything other than a `Number` was supplied, it is only processed by calling `.toLocaleString()`.
      */
-    displayNumber: function (value, thousands) {
+    displayNumber(value: number | null | undefined, thousands?: boolean): string {
         if (value === null || value === undefined) return '';
 
         if (typeof value === 'number') {
-            value = value.toString();
-            return i18n.formatRawNumberStringForDisplay(value, thousands);
+            value = value.toString() as any;
+            return i18n.formatRawNumberStringForDisplay(value as any, thousands);
         }
 
-        return value.toLocaleString();
+        return (value as any).toLocaleString();
     },
 
     /**
      * Format a stringified number for display using the correct decimal separator detected from the browser.
      * @public
      * @expose
-     * @param {string} value the value to format.
-     * @param {boolean=} thousands should we add a thousands separator
-     * @returns {string} The formatted number as string.
+     * @param value the value to format.
+     * @param thousands should we add a thousands separator
+     * @returns The formatted number as string.
      */
-    formatRawNumberStringForDisplay: function (value, thousands) {
+    formatRawNumberStringForDisplay(value: string, thousands?: boolean): string {
         if (value === '') return '';
 
-        const decimalSep = active.options.decimal,
-            thousandsSep = active.options.thousands;
+        const decimalSep = active!.options.decimal,
+            thousandsSep = active!.options.thousands;
 
         if (decimalSep !== '.') {
             value = value.replace(/\./g, decimalSep);
@@ -1021,18 +1058,18 @@ const i18n = {
      * If `thousands` is `true`, then it will allow parsing with the separator.
      * @public
      * @expose
-     * @param {number|string|null} value the value to parse.
-     * @param {boolean?} [thousands=false] - Don't break when there are thousands separators in the value
-     * @returns {number|null} The parsed number.
+     * @param value the value to parse.
+     * @param thousands Don't break when there are thousands separators in the value
+     * @returns The parsed number.
      *                   If null or empty string is supplied, then null is returned.
      *                   If a number was supplied, it is returned as-is.
      */
-    parseNumber: function (value, thousands) {
+    parseNumber(value: number | string | null, thousands?: boolean): number | null {
         if (value === '' || value == null) return null;
 
         if (typeof value !== 'number') {
             return parseFloat(
-                value.replace(active.options.decimalOrThousandsRegex, function (g0, dec, tho) {
+                value.replace(active!.options.decimalOrThousandsRegex, function (g0: string, dec: string, tho: string) {
                     if (dec) return '.';
                     if (tho) return thousands ? '' : ',';
                     return g0;
@@ -1096,11 +1133,11 @@ const i18n = {
      *                For g specifier: This is the maximum number of significant digits to be printed.
      *                For s: this is the maximum number of characters to be printed
      *
-     * @param {string} value - the value to process
-     * @param {Object?} data - the data for post processing. Passed to {...} specifiers too.
-     * @returns {string} the processed value
+     * @param value the value to process
+     * @param data the data for post processing. Passed to {...} specifiers too.
+     * @returns the processed value
      */
-    processLocalizedString: function (value, data) {
+    processLocalizedString(value: any, data?: any): string {
 
         if (typeof value !== 'string') return value;
 
@@ -1125,8 +1162,8 @@ const i18n = {
                 return arguments[0];
             }
 
-            let value;
-            let i, len;
+            let value: any;
+            let i: number, len: number;
 
             let filters = arguments[4];
             if (filters) {
@@ -1139,8 +1176,7 @@ const i18n = {
 
             if (openingBrackets.length === 1) {
 
-                /** @type string|null */
-                let gender = null;
+                let gender: string | null = null;
                 if (filters && filters[0][0] === 'g' && filters[0][1] === ':') {
                     const genderKey = filters[0].substr(2);
                     gender = data && (genderKey in data) ? data[genderKey] : i18n.t(genderKey);
@@ -1177,8 +1213,8 @@ const i18n = {
 
             for (i = 0, len = filters.length; i < len; i++) {
                 if (filters[i].length === 0) continue;
-                if (typeof active.options.filter === 'function') {
-                    value = active.options.filter(value, filters[i], filterValue);
+                if (typeof active!.options.filter === 'function') {
+                    value = active!.options.filter(value, filters[i], filterValue);
                 } else {
                     value = filterValue(value, filters[i]);
                 }
@@ -1199,13 +1235,13 @@ const i18n = {
                 options = arguments[2];
             try {
                 key = JSON.parse(key);
-            } catch (ignored) {
+            } catch (ignored: unknown) {
                 return arguments[0];
             }
             if (options) {
                 try {
                     options = JSON.parse(options);
-                } catch (ignored) {
+                } catch (ignored: unknown) {
                     options = null;
                 }
             }
@@ -1220,44 +1256,59 @@ const i18n = {
 
     /**
      * Set the default gender.
-     * @param {string} gender
+     * @param gender
      */
-    setDefaultGender: function (gender) {
+    setDefaultGender(gender: string) {
         defaultGender = gender || '';
     },
 
     /**
      * Retrieves the default gender.
-     * @return {string}
+     * @returns current default gender
      */
-    getDefaultOptions: function () {
+    getDefaultOptions(): string {
         return defaultGender;
     },
 };
 
-/**
- * @typedef {Object} LocalizedPhysicalFileSize
- * @property {number} size
- * @property {string} name
- * */
-/** */
+/** Localized physical file size payload. */
+type LocalizedPhysicalFileSize = {
+    size: number;
+    name: string;
+};
 
 /**
  * This function returns a key suffix for plural form, for the specified count.
- * @typedef {function(count:number):string} PluralFormFunction
- * @param {number} count the number that we need to inspect
- * @returns {string}
- * */
-/** */
+ */
+type PluralFormFunction = (count: number) => string;
 
 /**
- * @typedef {Object} AddLanguageOptions
- * @property {PluralFormFunction} plural - function that takes a number, and returns a key suffix for plural form of that count.
- * @property {string} [decimal='.'] - decimal separator character. The default is auto-detected from the browser locale
- * @property {string} [thousands=','] - thousands separator character. The default is auto-detected from the browser locale
- * @property {function(value: *, encoding: string, defaultEncoder: function):*} [filter] - encoder override for values, all filters will go through here
- * */
-/** */
+ * Options for adding a language.
+ * `plural` maps a numeric count to a plural key suffix.
+ * `decimal` and `thousands` override numeric separators.
+ * `filter` overrides value encoding/filter behavior.
+ */
+type AddLanguageOptions = {
+    plural?: PluralFormFunction;
+    decimal?: string;
+    thousands?: string;
+    filter?: (value: any, encoding: string, defaultEncoder: (value: any, encoding: string) => any) => any;
+};
+
+type LocOptions = {
+    plural: PluralFormFunction;
+    decimal: string;
+    thousands: string;
+    decimalOrThousandsRegex: RegExp;
+    filter?: AddLanguageOptions['filter'];
+};
+
+type Loc = {
+    code: string;
+    data: Record<string, any>;
+    options: LocOptions;
+};
 
 export default i18n;
 export const t = i18n.t;
+

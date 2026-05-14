@@ -1,4 +1,4 @@
-function recurse(results, lower, upper, hasCase, pre) {
+function recurse(results: string[], lower: string[], upper: string[], hasCase: boolean[], pre: string): void {
 
     const len = lower.length;
     let currenLen = pre.length;
@@ -8,7 +8,8 @@ function recurse(results, lower, upper, hasCase, pre) {
     }
 
     if (currenLen === len) {
-        return results.push(pre);
+        results.push(pre);
+        return;
     }
 
     recurse(results, lower, upper, hasCase, pre + lower[currenLen]);
@@ -17,17 +18,17 @@ function recurse(results, lower, upper, hasCase, pre) {
 
 /**
  * Generate an array of all lowercase-uppercase combinations of a given string
- * @param {string} text
- * @returns {string[]}
+ * @param text Source text
+ * @returns All lowercase-uppercase combinations for each cased character
  */
-function generateAllCasePermutations(text) {
+function generateAllCasePermutations(text: string): string[] {
     text = text + '';
     if (!text) return null;
 
-    const results = [];
+    const results: string[] = [];
     const lower = text.split('');
-    const upper = [];
-    const hasCase = [];
+    const upper: string[] = [];
+    const hasCase: boolean[] = [];
 
     let i = 0;
     const len = text.length;
@@ -43,3 +44,4 @@ function generateAllCasePermutations(text) {
 }
 
 export { generateAllCasePermutations };
+

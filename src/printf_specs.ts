@@ -1,4 +1,4 @@
-import { padLeft } from './utils.js';
+import { padLeft } from './utils.ts';
 
 const DEFAULT_DECIMAL_SEPARATOR = (1.1).toLocaleString().substr(1, 1);
 
@@ -10,13 +10,13 @@ const DEFAULT_THOUSANDS_SEPARATOR = (1000).toLocaleString().length === 5
 
 /**
  * This will process value with printf specifier format
- * @param {*} value the value to process
- * @param {string?} specifiers the printf style specifiers. i.e. '2.5f', 'E', '#x'
- * @param {string?} decimalSign the decimal separator character to use
- * @param {string?} thousandsSign the thousands separator character to use
- * @returns {string}
+ * @param value the value to process
+ * @param specifiers the printf style specifiers. i.e. '2.5f', 'E', '#x'
+ * @param decimalSign the decimal separator character to use
+ * @param thousandsSign the thousands separator character to use
+ * @returns The processed string value
  */
-function applySpecifiers(value, specifiers, decimalSign, thousandsSign) {
+function applySpecifiers(value: any, specifiers?: string, decimalSign?: string, thousandsSign?: string): any {
     if (!specifiers) return value;
 
     const type = specifiers[specifiers.length - 1];
@@ -55,17 +55,16 @@ function applySpecifiers(value, specifiers, decimalSign, thousandsSign) {
             value = value >>> 0;
         }
 
-        const parsedSpecifiers = specifiers.match(/(\+)?( )?(#)?(0)?([0-9]+)?(,)?(.([0-9]+))?/);
+        const parsedSpecifiers = specifiers.match(/(\+)?( )?(#)?(0)?([0-9]+)?(,)?(.([0-9]+))?/) as RegExpMatchArray;
         forceSign = parsedSpecifiers[1] === '+';
         spaceSign = parsedSpecifiers[2] === ' ';
         radiiOrDecimalSign = parsedSpecifiers[3] === '#';
         padZero = parsedSpecifiers[4] === '0';
         padCount = parsedSpecifiers[5] ? parseInt(parsedSpecifiers[5], 10) : 0;
         hasThousands = parsedSpecifiers[6];
-        precision = parsedSpecifiers[8];
 
-        if (precision) {
-            precision = parseInt(precision, 10);
+        if (parsedSpecifiers[8]) {
+            precision = parseInt(parsedSpecifiers[8], 10);
         }
 
         decimalSign = decimalSign || DEFAULT_DECIMAL_SEPARATOR;
@@ -80,11 +79,11 @@ function applySpecifiers(value, specifiers, decimalSign, thousandsSign) {
         value = (/**@type number*/value).toString();
     } else if (type === 'e' || type === 'E') {
         value = (precision !== undefined
-            ? (/**@type number*/value).toExponential(parseInt(precision, 10))
+            ? (/**@type number*/value).toExponential(precision)
             : (/**@type number*/value).toExponential()).toString();
     } else if (type === 'f') {
         value = (precision !== undefined
-            ? parseFloat(value).toFixed(parseInt(precision, 10))
+            ? parseFloat(value).toFixed(precision)
             : parseFloat(value)).toString();
     } else if (type === 'g') {
         value = parseFloat(value).toString();
@@ -187,3 +186,4 @@ function applySpecifiers(value, specifiers, decimalSign, thousandsSign) {
 }
 
 export { applySpecifiers };
+
