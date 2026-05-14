@@ -95,13 +95,12 @@ const BASE_REGEX = (() => {
 type TranslationData = Record<string, any> & {
     count?: number;
     gender?: string;
+    useOriginal?: true;
 };
 
 type TranslateFunction = {
     <T = any>(keypath: string, options?: TranslationData): T;
-    <T = any>(keypath: string, useOriginal: boolean, options?: TranslationData): T;
     <T = any>(keypath: readonly string[], options?: TranslationData): T;
-    <T = any>(keypath: readonly string[], useOriginal: boolean, options?: TranslationData): T;
     <T = any>(key1: string, key2: string, ...rest: Array<string | boolean | TranslationData | undefined>): T;
 };
 
@@ -240,10 +239,8 @@ const i18n: I18nApi = {
         const args = arguments;
         let argIndex = 0,
             keys: string[],
-            useOriginal = false,
             locale: Loc,
             tryFallback = true,
-            options: any,
             i: number,
             len: number;
 
@@ -270,12 +267,9 @@ const i18n: I18nApi = {
             }
         }
 
-        // `useOriginal` argument
-        options = args[argIndex++];
-        if (typeof options === 'boolean') {
-            useOriginal = options;
-            options = args[argIndex];
-        }
+        const options = args[argIndex++];
+
+        const useOriginal = options?.useOriginal ?? false;
 
         // Choose locale
         if (useOriginal) {
