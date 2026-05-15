@@ -98,13 +98,13 @@ type TranslationData = Record<string, any> & {
     useOriginal?: true;
 };
 
-type TranslateFunction = {
+export type TranslateFunction = {
     <T = any>(keypath: string, options?: TranslationData): T;
     <T = any>(keypath: readonly string[], options?: TranslationData): T;
     <T = any>(key1: string, key2: string, ...rest: Array<string | boolean | TranslationData | undefined>): T;
 };
 
-type I18nApi = {
+export type I18nApi = {
     t: TranslateFunction;
     add(langCode: string, data: Record<string, any>, options?: AddLanguageOptions): I18nApi;
     reset(): void;
