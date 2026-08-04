@@ -5,11 +5,11 @@
   "main": "dist/i18n.cjs.min.js",
   "module": "dist/i18n.es6.min.js",
   "broswer": "dist/i18n.umd.min.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/i18n.d.ts",
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./dist/i18n.d.ts",
       "import": "./dist/i18n.es6.min.js",
       "require": "./dist/i18n.cjs.min.js",
       "default": "./dist/i18n.es6.min.js"
