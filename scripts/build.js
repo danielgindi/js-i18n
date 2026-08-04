@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
 import Path from 'node:path';
-import { readFile, writeFile, rmdir, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, rm, mkdir } from 'node:fs/promises';
 import { rollup } from 'rollup';
 import PluginReplace from '@rollup/plugin-replace';
 import MagicString from 'magic-string';
@@ -15,7 +15,7 @@ import { execSync } from 'node:child_process';
 
 (async () => {
 
-    await rmdir('./dist', { recursive: true });
+    await rm('./dist', { recursive: true });
     await mkdir('./dist');
 
     // Generate TypeScript declaration files first
