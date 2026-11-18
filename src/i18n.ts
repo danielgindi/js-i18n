@@ -760,7 +760,7 @@ const i18n: I18nApi = {
             let year: number | null = null, month: number | null = null, day: number | null = null,
                 hours: number | null = null, hours12 = false, hoursTT: string, minutes: number | null = null,
                 seconds: number | null = null, milliseconds: number | null = null,
-                timezone: number | null = null, timezoneSeconds = 0;
+                timezone: number | null = null;
 
             let i = 0;
             const len = parts.length;
@@ -945,22 +945,15 @@ const i18n: I18nApi = {
                 }
             }
 
-            const parsedDate = new Date(year, month, day, hours || 0, minutes || 0, seconds || 0, milliseconds || 0);
             if (timezone !== null) {
-                const tzOffset = parsedDate.getTimezoneOffset();
-                timezone += parsedDate.getTimezoneOffset();
-                if (parsedDate.getSeconds() !== parsedDate.getUTCSeconds() && Math.trunc(tzOffset) === tzOffset) {
-                    timezoneSeconds -= 60 - (parsedDate.getUTCSeconds() - parsedDate.getSeconds());
-                }
+                const parsedDate = new Date(0);
+                parsedDate.setUTCFullYear(year, month, day);
+                parsedDate.setUTCHours(hours || 0, minutes || 0, seconds || 0, milliseconds || 0);
+                parsedDate.setUTCMinutes(parsedDate.getUTCMinutes() - timezone);
+                return parsedDate;
             }
 
-            parsedDate.setMinutes(parsedDate.getMinutes() - timezone);
-
-            if (timezoneSeconds) {
-                parsedDate.setSeconds(parsedDate.getSeconds() - timezoneSeconds);
-            }
-
-            return parsedDate;
+            return new Date(year, month, day, hours || 0, minutes || 0, seconds || 0, milliseconds || 0);
         };
     },
 
